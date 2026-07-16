@@ -65,6 +65,71 @@ const seedDatabase = async () => {
       await Role.insertMany(roleDocs);
       logger.info('Default roles seeded successfully.');
     }
+
+    // Seed Restaurant & Branch if empty
+    const Restaurant = require('./models/Restaurant.model');
+    const Branch = require('./models/Branch.model');
+    const Floor = require('./models/Floor.model');
+    const Table = require('./models/Table.model');
+    const Category = require('./models/Category.model');
+
+    let restaurant = await Restaurant.findOne();
+    if (!restaurant) {
+      logger.info('Seeding default restaurant and branch profile...');
+      restaurant = await Restaurant.create({
+        name: 'RestaurantOS AI HQ',
+        currency: 'USD',
+        address: '100 Baker St, London, UK',
+        phone: '+44 20 7946 0958',
+        email: 'info@restaurantos.ai',
+      });
+    }
+
+    let branch = await Branch.findOne({ restaurantId: restaurant._id });
+    if (!branch) {
+      branch = await Branch.create({
+        restaurantId: restaurant._id,
+        name: 'London Central Branch',
+        address: '100 Baker St, London, UK',
+        phone: '+44 20 7946 0958',
+      });
+    }
+
+    let floor = await Floor.findOne({ branchId: branch._id });
+    if (!floor) {
+      logger.info('Seeding default floor level...');
+      floor = await Floor.create({
+        branchId: branch._id,
+        name: 'Ground Floor',
+        level: 0,
+      });
+    }
+
+    const tableCount = await Table.countDocuments({ branchId: branch._id });
+    if (tableCount === 0) {
+      logger.info('Seeding initial floor layout tables...');
+      const defaultTables = [
+        { branchId: branch._id, floorId: floor._id, number: '1', capacity: 2, shape: 'square', position: { x: 80, y: 80 } },
+        { branchId: branch._id, floorId: floor._id, number: '2', capacity: 4, shape: 'square', position: { x: 200, y: 80 } },
+        { branchId: branch._id, floorId: floor._id, number: '3', capacity: 4, shape: 'circle', position: { x: 340, y: 80 } },
+        { branchId: branch._id, floorId: floor._id, number: '4', capacity: 6, shape: 'square', position: { x: 80, y: 220 } },
+        { branchId: branch._id, floorId: floor._id, number: '5', capacity: 2, shape: 'circle', position: { x: 240, y: 220 } },
+        { branchId: branch._id, floorId: floor._id, number: 'Bar-1', capacity: 1, shape: 'circle', position: { x: 380, y: 220 } },
+      ];
+      await Table.insertMany(defaultTables);
+    }
+
+    const categoryCount = await Category.countDocuments();
+    if (categoryCount === 0) {
+      logger.info('Seeding default menu categories...');
+      const defaultCategories = [
+        { restaurantId: restaurant._id, name: 'Starters', slug: 'starters', order: 1 },
+        { restaurantId: restaurant._id, name: 'Main Course', slug: 'mains', order: 2 },
+        { restaurantId: restaurant._id, name: 'Desserts', slug: 'desserts', order: 3 },
+        { restaurantId: restaurant._id, name: 'Beverages', slug: 'beverages', order: 4 },
+      ];
+      await Category.insertMany(defaultCategories);
+    }
   } catch (error) {
     logger.error('Error seeding roles/permissions:', error);
   }

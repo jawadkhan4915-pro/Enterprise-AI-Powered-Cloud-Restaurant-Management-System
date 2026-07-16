@@ -42,6 +42,9 @@ app.use(
 // Mount API routes
 app.use('/api', routes);
 
+// Serve uploads directory static resources (menu items images)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // Serve static frontend files from client/dist
 const clientBuildPath = path.join(__dirname, '../../client/dist');
 app.use(express.static(clientBuildPath));

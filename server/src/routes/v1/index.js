@@ -1,6 +1,8 @@
 const express = require('express');
 const authRoutes = require('./auth.routes');
 const userRoutes = require('./user.routes');
+const restaurantRoutes = require('./restaurant.routes');
+const menuRoutes = require('./menu.routes');
 const ApiResponse = require('../../utils/ApiResponse');
 
 const router = express.Router();
@@ -12,5 +14,7 @@ router.get('/health', (req, res) => {
 
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
+router.use('/restaurant', restaurantRoutes);
+router.use('/menu', menuRoutes);
 
 module.exports = router;
