@@ -1,6 +1,6 @@
 const OpenAIAdapter = require('./adapters/openai.adapter');
 const MockAIAdapter = require('./adapters/mock.adapter');
-const logger = require('../../utils/logger');
+const logger = require('../../config/logger');
 
 class AIService {
   constructor() {
