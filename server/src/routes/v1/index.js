@@ -3,6 +3,7 @@ const authRoutes = require('./auth.routes');
 const userRoutes = require('./user.routes');
 const restaurantRoutes = require('./restaurant.routes');
 const menuRoutes = require('./menu.routes');
+const orderRoutes = require('./order.routes');
 const ApiResponse = require('../../utils/ApiResponse');
 
 const router = express.Router();
@@ -16,5 +17,6 @@ router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/restaurant', restaurantRoutes);
 router.use('/menu', menuRoutes);
+router.use('/orders', orderRoutes);
 
 module.exports = router;
