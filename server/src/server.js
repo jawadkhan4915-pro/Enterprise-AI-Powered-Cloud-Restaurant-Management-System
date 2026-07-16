@@ -157,6 +157,115 @@ const seedDatabase = async () => {
         { branchId: branch._id, name: 'Disposable Gloves', sku: 'SUP-001', category: 'supply', unit: 'piece', currentStock: 200, minimumStock: 50, costPerUnit: 0.1 },
       ]);
     }
+
+    // Seed default customers
+    const Customer = require('./models/Customer.model');
+    const customerCount = await Customer.countDocuments();
+    let seededCustomer;
+    if (customerCount === 0) {
+      logger.info('Seeding default customer profiles...');
+      seededCustomer = await Customer.create({
+        name: 'Alice Smith',
+        phone: '+44 7911 123456',
+        email: 'alice.smith@example.com',
+        loyaltyPoints: 250, // Starts at silver tier
+        visitCount: 12,
+        totalSpent: 340.50,
+      });
+      await Customer.create({
+        name: 'Bob Jones',
+        phone: '+44 7911 654321',
+        email: 'bob.jones@example.com',
+        loyaltyPoints: 600, // Starts at gold tier
+        visitCount: 24,
+        totalSpent: 890.00,
+      });
+    } else {
+      seededCustomer = await Customer.findOne();
+    }
+
+    // Seed default reservations
+    const Reservation = require('./models/Reservation.model');
+    const reservationCount = await Reservation.countDocuments();
+    if (reservationCount === 0 && seededCustomer) {
+      logger.info('Seeding default reservations...');
+      const Table = require('./models/Table.model');
+      const table = await Table.findOne({ branchId: branch._id });
+
+      const reservationTime = new Date();
+      reservationTime.setDate(reservationTime.getDate() + 1); // tomorrow
+      reservationTime.setHours(19, 0, 0, 0); // 7:00 PM
+
+      await Reservation.create({
+        customerId: seededCustomer._id,
+        customerName: seededCustomer.name,
+        customerPhone: seededCustomer.phone,
+        branchId: branch._id,
+        tableId: table ? table._id : null,
+        partySize: 4,
+        reservationTime,
+        status: 'confirmed',
+        notes: 'Needs high chair for toddler.',
+      });
+    }
+
+    // Seed default employees
+    const Employee = require('./models/Employee.model');
+    const employeeCount = await Employee.countDocuments();
+    if (employeeCount === 0) {
+      logger.info('Seeding default employees...');
+      await Employee.create({
+        name: 'John Miller',
+        email: 'john.miller@restaurant.com',
+        phone: '+44 7911 777888',
+        role: 'waiter',
+        salary: 15,
+        hourlyRate: 15,
+        shift: { start: '08:00', end: '16:00' },
+        status: 'active',
+      });
+      await Employee.create({
+        name: 'Sarah Connor',
+        email: 'sarah.connor@restaurant.com',
+        phone: '+44 7911 999000',
+        role: 'chef',
+        salary: 25,
+        hourlyRate: 25,
+        shift: { start: '14:00', end: '22:00' },
+        status: 'active',
+      });
+    }
+
+    // Seed default expenses
+    const Expense = require('./models/Expense.model');
+    const expenseCount = await Expense.countDocuments();
+    if (expenseCount === 0) {
+      logger.info('Seeding default expenses...');
+      const User = require('./models/User.model');
+      const ownerUser = await User.findOne({ email: 'owner@test.com' });
+
+      await Expense.create({
+        branchId: branch._id,
+        category: 'utilities',
+        amount: 250.00,
+        description: 'Monthly electricity bill - June',
+        date: new Date(),
+        status: 'paid',
+        paymentMethod: 'bank_transfer',
+        performedBy: ownerUser ? ownerUser._id : null,
+      });
+
+      await Expense.create({
+        branchId: branch._id,
+        category: 'inventory',
+        amount: 500.00,
+        description: 'Meat and seafood weekly supply order',
+        date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+        status: 'paid',
+        paymentMethod: 'card',
+        performedBy: ownerUser ? ownerUser._id : null,
+      });
+    }
   } catch (error) {
     logger.error('Error seeding roles/permissions:', error);
   }

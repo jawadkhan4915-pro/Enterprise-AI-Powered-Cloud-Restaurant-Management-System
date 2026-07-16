@@ -6,10 +6,12 @@ import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import api from '../../services/api';
-import { Calendar, Save, Plus, HelpCircle, Users, CheckCircle, RefreshCw } from 'lucide-react';
+import { useSocket } from '../../contexts/SocketContext';
+import { Calendar, Save, Plus, HelpCircle, Users, CheckCircle, RefreshCw, Clock, X, User } from 'lucide-react';
 
 export const ReservationsPage = () => {
   const dispatch = useDispatch();
+  const socket = useSocket();
   const canvasRef = useRef(null);
 
   const [branches, setBranches] = useState([]);
@@ -17,15 +19,26 @@ export const ReservationsPage = () => {
   const [floors, setFloors] = useState([]);
   const [activeFloorId, setActiveFloorId] = useState('');
   const [tables, setTables] = useState([]);
+  const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Drag states
   const [draggingTableId, setDraggingTableId] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
-  // Creation Drawer Form
+  // Creation Drawer Forms
   const [showAddTable, setShowAddTable] = useState(false);
   const [newTable, setNewTable] = useState({ number: '', capacity: 4, shape: 'square' });
+
+  const [showAddBooking, setShowAddBooking] = useState(false);
+  const [newBooking, setNewBooking] = useState({
+    customerName: '',
+    customerPhone: '',
+    partySize: 2,
+    reservationTime: '',
+    tableId: '',
+    notes: '',
+  });
 
   useEffect(() => {
     fetchBranches();
@@ -34,6 +47,7 @@ export const ReservationsPage = () => {
   useEffect(() => {
     if (activeBranchId) {
       fetchFloors();
+      fetchReservations();
     }
   }, [activeBranchId]);
 
@@ -42,6 +56,18 @@ export const ReservationsPage = () => {
       fetchTables();
     }
   }, [activeFloorId]);
+
+  // Real-time table status updates from POS checkout or status transitions
+  useEffect(() => {
+    if (!socket) return;
+    socket.on('table_status_sync', () => {
+      fetchTables();
+      fetchReservations();
+    });
+    return () => {
+      socket.off('table_status_sync');
+    };
+  }, [socket, activeFloorId]);
 
   const fetchBranches = async () => {
     try {
@@ -79,6 +105,15 @@ export const ReservationsPage = () => {
     }
   };
 
+  const fetchReservations = async () => {
+    try {
+      const res = await api.get(`/reservations?branchId=${activeBranchId}`);
+      setReservations(res.data.data.items);
+    } catch (err) {
+      dispatch(addToast({ message: 'Error loading reservations list', type: 'error' }));
+    }
+  };
+
   // Drag & drop logic
   const handleMouseDown = (e, table) => {
     e.preventDefault();
@@ -101,18 +136,18 @@ export const ReservationsPage = () => {
     if (!draggingTableId || !canvasRef.current) return;
 
     const rect = canvasRef.current.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+    const mouseX = e.clientX - dragOffset.x;
+    const mouseY = e.clientY - dragOffset.y;
 
-    // Calculate new position coordinates
-    let newX = Math.round(mouseX - dragOffset.x);
-    let newY = Math.round(mouseY - dragOffset.y);
+    // Relative to canvas coordinates bounds
+    const canvasRect = canvasRef.current.getBoundingClientRect();
+    let newX = Math.round(e.clientX - canvasRect.left - dragOffset.x);
+    let newY = Math.round(e.clientY - canvasRect.top - dragOffset.y);
 
-    // Enforce bounds within 600px width and 450px height canvas
-    newX = Math.max(10, Math.min(newX, rect.width - 90));
-    newY = Math.max(10, Math.min(newY, rect.height - 90));
+    // Enforce boundaries
+    newX = Math.max(10, Math.min(newX, canvasRect.width - 90));
+    newY = Math.max(10, Math.min(newY, canvasRect.height - 90));
 
-    // Update state coordinate representation in real time
     setTables((prev) =>
       prev.map((t) => (t._id === draggingTableId ? { ...t, position: { x: newX, y: newY } } : t))
     );
@@ -171,7 +206,7 @@ export const ReservationsPage = () => {
         number: newTable.number,
         capacity: newTable.capacity,
         shape: newTable.shape,
-        position: { x: 50, y: 50 }, // standard origin placement
+        position: { x: 50, y: 50 },
       });
       setTables(prev => [...prev, res.data.data.table]);
       setNewTable({ number: '', capacity: 4, shape: 'square' });
@@ -184,6 +219,43 @@ export const ReservationsPage = () => {
     }
   };
 
+  // ── CRM bookings bookings logic ───────────────────────────────────────────
+  const handleAddBooking = async (e) => {
+    e.preventDefault();
+    if (!newBooking.customerName.trim() || !newBooking.customerPhone.trim() || !newBooking.reservationTime) {
+      dispatch(addToast({ message: 'Name, Phone, and Time are required', type: 'error' }));
+      return;
+    }
+    setLoading(true);
+    try {
+      const payload = {
+        ...newBooking,
+        branchId: activeBranchId,
+      };
+      const res = await api.post('/reservations', payload);
+      setReservations(prev => [res.data.data.reservation, ...prev]);
+      setShowAddBooking(false);
+      setNewBooking({ customerName: '', customerPhone: '', partySize: 2, reservationTime: '', tableId: '', notes: '' });
+      dispatch(addToast({ message: 'New booking registered', type: 'success' }));
+      fetchTables(); // Reload tables layout to reflect the potentially reserved state
+    } catch (err) {
+      dispatch(addToast({ message: 'Failed to register booking', type: 'error' }));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSeatCustomer = async (bookingId) => {
+    try {
+      await api.patch(`/reservations/${bookingId}/status`, { status: 'seated' });
+      dispatch(addToast({ message: 'Customer marked as Seated. Table state updated.', type: 'success' }));
+      fetchTables();
+      fetchReservations();
+    } catch (err) {
+      dispatch(addToast({ message: 'Failed to seat customer', type: 'error' }));
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -191,13 +263,16 @@ export const ReservationsPage = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-zinc-50 flex items-center">
-              <Calendar className="h-6 w-6 mr-2 text-primary" /> Visual Floor Planner
+              <Calendar className="h-6 w-6 mr-2 text-primary" /> Visual Floor Planner & Bookings
             </h1>
             <p className="text-slate-500 text-sm mt-1">
-              Drag and drop tables to construct visual floor plan layouts. Seating levels coordinate with active branch configurations.
+              Drag and drop tables to construct visual floor plan layouts and seat reservations in real time.
             </p>
           </div>
           <div className="flex space-x-2">
+            <Button variant="outline" size="sm" icon={Plus} onClick={() => setShowAddBooking(true)}>
+              Book Table
+            </Button>
             <Button variant="outline" size="sm" icon={Plus} onClick={handleCreateFloor}>
               Floor Level
             </Button>
@@ -293,8 +368,8 @@ export const ReservationsPage = () => {
                   const isReserved = table.status === 'reserved';
                   const isDirty = table.status === 'dirty';
                   
-                  const bgColors = isOccupied ? 'bg-red-500 border-red-600 text-white' : 
-                                   isReserved ? 'bg-blue-500 border-blue-600 text-white' :
+                  const bgColors = isOccupied ? 'bg-red-500 border-red-650 text-white' : 
+                                   isReserved ? 'bg-blue-555 border-blue-650 text-white' :
                                    isDirty ? 'bg-amber-500 border-amber-600 text-white' :
                                    'bg-white border-slate-200 text-slate-700 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-200';
 
@@ -323,38 +398,120 @@ export const ReservationsPage = () => {
             </div>
           </div>
 
-          {/* Quick Stats Panel */}
+          {/* Active Bookings Lists side panel */}
           <div className="space-y-6">
             <Card className="space-y-4">
               <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-200 flex items-center">
-                <HelpCircle className="h-4.5 w-4.5 mr-1.5 text-primary" /> Layout Help
+                <Clock className="h-4.5 w-4.5 mr-1.5 text-primary" /> Tomorrow's Bookings
               </h4>
-              <div className="text-[11px] leading-relaxed text-slate-500 dark:text-zinc-400 space-y-2">
-                <p>💡 **Instructions:** Click and hold any table card to drag and reposition it on the coordinate canvas grid.</p>
-                <p>💾 Make sure to click the **Save Layout** button to store table coordinate arrays in the database.</p>
-              </div>
-            </Card>
+              <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+                {reservations.length === 0 ? (
+                  <p className="text-[10px] text-slate-400 font-semibold text-center py-4">No upcoming bookings logged.</p>
+                ) : (
+                  reservations.map(res => (
+                    <div key={res._id} className="p-3 border border-slate-100 dark:border-zinc-900 bg-slate-50/50 dark:bg-zinc-900/30 rounded-card space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-0.5">
+                          <p className="text-xs font-bold text-slate-800 dark:text-zinc-100">{res.customerName}</p>
+                          <p className="text-[10px] text-slate-400">{res.customerPhone}</p>
+                        </div>
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-pill capitalize ${
+                          res.status === 'confirmed' ? 'bg-blue-100 text-blue-600 dark:bg-blue-950/20' :
+                          res.status === 'seated' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/20' :
+                          'bg-slate-100 text-slate-500'
+                        }`}>
+                          {res.status}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between text-[10px] text-slate-400 border-t border-slate-100 dark:border-zinc-800 pt-1.5">
+                        <span>Guests: {res.partySize}</span>
+                        <span>Table: #{res.tableId?.number || '—'}</span>
+                      </div>
 
-            <Card className="space-y-4">
-              <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-200">Table Stats</h4>
-              <div className="space-y-2.5 text-xs">
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-400">Total Tables</span>
-                  <span className="font-bold text-slate-800 dark:text-zinc-200">{tables.length}</span>
-                </div>
-                <div className="flex justify-between items-center text-emerald-500">
-                  <span className="text-slate-400">Available</span>
-                  <span className="font-bold">{tables.filter(t => t.status === 'available').length}</span>
-                </div>
-                <div className="flex justify-between items-center text-red-500">
-                  <span className="text-slate-400">Occupied</span>
-                  <span className="font-bold">{tables.filter(t => t.status === 'occupied').length}</span>
-                </div>
+                      {res.status === 'confirmed' && (
+                        <div className="flex justify-end pt-1">
+                          <Button 
+                            onClick={() => handleSeatCustomer(res._id)}
+                            variant="primary" 
+                            size="sm" 
+                            className="text-[9px] font-bold px-2 py-0.5"
+                          >
+                            Seat Guest
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
             </Card>
           </div>
         </div>
       </div>
+
+      {/* Modal Book Reservation */}
+      {showAddBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white border border-slate-100 dark:bg-zinc-950 dark:border-zinc-900 w-full max-w-sm rounded-card p-6 shadow-premium space-y-4 animate-scale-in">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-zinc-100 flex items-center">
+              <Calendar className="h-4.5 w-4.5 mr-2 text-primary" /> Book Guest Reservation
+            </h3>
+            <form onSubmit={handleAddBooking} className="space-y-4">
+              <Input 
+                label="Customer Name" 
+                value={newBooking.customerName} 
+                onChange={(e) => setNewBooking(prev => ({ ...prev, customerName: e.target.value }))}
+                required 
+              />
+              <Input 
+                label="Customer Phone" 
+                value={newBooking.customerPhone} 
+                onChange={(e) => setNewBooking(prev => ({ ...prev, customerPhone: e.target.value }))}
+                required 
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <Input 
+                  label="Party Size" 
+                  type="number"
+                  value={newBooking.partySize} 
+                  onChange={(e) => setNewBooking(prev => ({ ...prev, partySize: parseInt(e.target.value, 10) || 2 }))}
+                  required 
+                />
+                <div className="flex flex-col space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300">Table Mapping</label>
+                  <select
+                    value={newBooking.tableId}
+                    onChange={(e) => setNewBooking(prev => ({ ...prev, tableId: e.target.value }))}
+                    className="px-3 py-2 text-xs border bg-white border-slate-350 rounded-input focus:outline-none dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-200"
+                  >
+                    <option value="">Select table</option>
+                    {tables.map(t => (
+                      <option key={t._id} value={t._id}>Table #{t.number} (Seats {t.capacity})</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <Input 
+                label="Reservation Date/Time" 
+                type="datetime-local"
+                value={newBooking.reservationTime} 
+                onChange={(e) => setNewBooking(prev => ({ ...prev, reservationTime: e.target.value }))}
+                required 
+              />
+              <Input 
+                label="Special Requests notes" 
+                value={newBooking.notes} 
+                onChange={(e) => setNewBooking(prev => ({ ...prev, notes: e.target.value }))}
+              />
+              <div className="flex justify-end space-x-2 pt-2">
+                <Button variant="outline" size="sm" onClick={() => setShowAddBooking(false)}>Cancel</Button>
+                <Button type="submit" variant="primary" size="sm">Book Guest</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 };

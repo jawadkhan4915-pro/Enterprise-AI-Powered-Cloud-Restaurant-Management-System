@@ -5,6 +5,10 @@ const restaurantRoutes = require('./restaurant.routes');
 const menuRoutes = require('./menu.routes');
 const orderRoutes = require('./order.routes');
 const inventoryRoutes = require('./inventory.routes');
+const crmRoutes = require('./crm.routes');
+const reservationsRoutes = require('./reservations.routes');
+const employeesRoutes = require('./employees.routes');
+const financeRoutes = require('./finance.routes');
 const ApiResponse = require('../../utils/ApiResponse');
 
 const router = express.Router();
@@ -20,5 +24,9 @@ router.use('/restaurant', restaurantRoutes);
 router.use('/menu', menuRoutes);
 router.use('/orders', orderRoutes);
 router.use('/inventory', inventoryRoutes);
+router.use('/crm', crmRoutes);
+router.use('/reservations', reservationsRoutes);
+router.use('/employees', employeesRoutes);
+router.use('/finance', financeRoutes);
 
 module.exports = router;
