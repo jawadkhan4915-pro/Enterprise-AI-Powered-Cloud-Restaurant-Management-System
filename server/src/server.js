@@ -130,6 +130,33 @@ const seedDatabase = async () => {
       ];
       await Category.insertMany(defaultCategories);
     }
+
+    // Seed default inventory items if empty
+    const InventoryItem = require('./models/InventoryItem.model');
+    const Supplier = require('./models/Supplier.model');
+
+    const inventoryCount = await InventoryItem.countDocuments();
+    if (inventoryCount === 0) {
+      logger.info('Seeding default inventory items and supplier...');
+      const supplier = await Supplier.create({
+        restaurantId: restaurant._id,
+        name: 'FreshMart Suppliers',
+        contactName: 'James Collins',
+        phone: '+44 20 7946 1234',
+        email: 'orders@freshmart.co.uk',
+        address: '45 Market Street, London, UK',
+      });
+
+      await InventoryItem.insertMany([
+        { branchId: branch._id, supplierId: supplier._id, name: 'Salmon Fillet', sku: 'ING-001', category: 'ingredient', unit: 'kg', currentStock: 10, minimumStock: 2, costPerUnit: 18 },
+        { branchId: branch._id, supplierId: supplier._id, name: 'Chicken Breast', sku: 'ING-002', category: 'ingredient', unit: 'kg', currentStock: 15, minimumStock: 3, costPerUnit: 8 },
+        { branchId: branch._id, supplierId: supplier._id, name: 'Olive Oil', sku: 'ING-003', category: 'ingredient', unit: 'liter', currentStock: 5, minimumStock: 1, costPerUnit: 12 },
+        { branchId: branch._id, supplierId: supplier._id, name: 'Pasta Penne', sku: 'ING-004', category: 'ingredient', unit: 'kg', currentStock: 20, minimumStock: 5, costPerUnit: 3 },
+        { branchId: branch._id, supplierId: supplier._id, name: 'Mineral Water 500ml', sku: 'BEV-001', category: 'beverage', unit: 'piece', currentStock: 100, minimumStock: 20, costPerUnit: 0.5 },
+        { branchId: branch._id, supplierId: supplier._id, name: 'Coca-Cola Can', sku: 'BEV-002', category: 'beverage', unit: 'piece', currentStock: 80, minimumStock: 15, costPerUnit: 0.9 },
+        { branchId: branch._id, name: 'Disposable Gloves', sku: 'SUP-001', category: 'supply', unit: 'piece', currentStock: 200, minimumStock: 50, costPerUnit: 0.1 },
+      ]);
+    }
   } catch (error) {
     logger.error('Error seeding roles/permissions:', error);
   }

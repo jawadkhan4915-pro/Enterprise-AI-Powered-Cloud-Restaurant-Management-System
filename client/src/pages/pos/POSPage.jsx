@@ -44,12 +44,18 @@ export const POSPage = () => {
       const itemsRes = await api.get('/menu/items');
       setMenuItems(itemsRes.data.data.items);
 
-      // Load active tables list for dine-in selectors
-      const floorPlanRes = await api.get('/restaurant/floors');
-      if (floorPlanRes.data.data.floors.length > 0) {
-        const floorId = floorPlanRes.data.data.floors[0]._id;
-        const tablesRes = await api.get(`/restaurant/tables?floorId=${floorId}`);
-        setTables(tablesRes.data.data.tables.filter(t => t.status === 'available'));
+      // Load branches first
+      const branchRes = await api.get('/restaurant/branches');
+      const branchesList = branchRes.data.data.branches;
+      if (branchesList.length > 0) {
+        const branchId = branchesList[0]._id;
+        // Load active floors for this branch
+        const floorPlanRes = await api.get(`/restaurant/floors?branchId=${branchId}`);
+        if (floorPlanRes.data.data.floors.length > 0) {
+          const floorId = floorPlanRes.data.data.floors[0]._id;
+          const tablesRes = await api.get(`/restaurant/tables?floorId=${floorId}`);
+          setTables(tablesRes.data.data.tables.filter(t => t.status === 'available'));
+        }
       }
     } catch (err) {
       dispatch(addToast({ message: 'Error retrieving POS terminals data', type: 'error' }));
