@@ -1,57 +1,214 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import useAuth from '../../hooks/useAuth';
-import Button from '../../components/ui/Button';
+import DashboardLayout from '../../layouts/DashboardLayout';
 import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import { 
+  SalesAreaChart, 
+  MenuPerformanceBarChart, 
+  OrdersDistributionPieChart 
+} from '../../components/charts/DashboardCharts';
+import { 
+  TrendingUp, 
+  Users, 
+  ChefHat, 
+  AlertTriangle, 
+  ArrowUpRight, 
+  Clock, 
+  Calendar,
+  Layers,
+  ChevronRight,
+  TrendingDown
+} from 'lucide-react';
 
 export const DashboardPage = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const [time, setTime] = useState(new Date());
+
+  // Real-time clock refresh
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const getGreeting = () => {
+    const hour = time.getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  };
+
+  const formatTime = (date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  };
+
+  const formatDate = (date) => {
+    return date.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  // Mock dashboard stats
+  const kpis = [
+    {
+      title: "Today's Sales",
+      value: "$4,820.50",
+      change: "+12.3%",
+      changeType: "up",
+      icon: TrendingUp,
+      iconClass: "bg-emerald-100 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-500",
+    },
+    {
+      title: "Active Occupancy",
+      value: "14 / 20 Tables",
+      change: "70% Full",
+      changeType: "neutral",
+      icon: Users,
+      iconClass: "bg-blue-100 text-blue-600 dark:bg-blue-950/30 dark:text-blue-500",
+    },
+    {
+      title: "Kitchen Queue",
+      value: "8 Orders Cooking",
+      change: "4 Priority",
+      changeType: "warning",
+      icon: ChefHat,
+      iconClass: "bg-purple-100 text-purple-600 dark:bg-purple-950/30 dark:text-purple-500",
+    },
+    {
+      title: "Inventory Alert",
+      value: "3 Items Low",
+      change: "Needs ordering",
+      changeType: "danger",
+      icon: AlertTriangle,
+      iconClass: "bg-red-100 text-red-600 dark:bg-red-950/30 dark:text-red-500",
+    },
+  ];
+
+  const recentEvents = [
+    { id: 1, action: 'Order #1084 paid via Cash', user: 'Cashier Sarah', time: '2m ago' },
+    { id: 2, action: 'Table 8 changed status to Dirty', user: 'Waiter John', time: '5m ago' },
+    { id: 3, action: 'Waste Entry: 1.2kg Chicken discarded', user: 'Chef Chef', time: '12m ago' },
+    { id: 4, action: 'Low stock triggered: Tomato Sauce', user: 'System', time: '18m ago' },
+  ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 p-8 transition-colors duration-200">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex justify-between items-center">
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Dynamic header welcome banner & Clock */}
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 p-6 rounded-card shadow-soft space-y-4 md:space-y-0">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-zinc-50">
-              Dashboard
+            <h1 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-zinc-50">
+              {getGreeting()}, {user?.name || 'User'}
             </h1>
-            <p className="text-slate-500 text-sm mt-1">
-              Welcome back to your RestaurantOS control panel.
+            <p className="text-xs text-slate-400 dark:text-zinc-500 mt-1 font-semibold">
+              Role: <span className="uppercase text-primary">{user?.role}</span> • Restaurant branch location: London Central
             </p>
           </div>
-          <Button variant="outline" onClick={logout}>
-            Sign out
-          </Button>
+          
+          {/* Clock Widget */}
+          <div className="flex items-center space-x-4 border-l border-slate-100 dark:border-zinc-800 pl-0 md:pl-6">
+            <div className="p-2 bg-slate-50 dark:bg-zinc-800/50 rounded-card text-slate-400 dark:text-zinc-500">
+              <Clock className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-sm font-bold text-slate-800 dark:text-zinc-200">
+                {formatTime(time)}
+              </div>
+              <div className="text-[10px] text-slate-400 dark:text-zinc-500 font-semibold uppercase">
+                {formatDate(time)}
+              </div>
+            </div>
+          </div>
         </div>
 
-        <Card className="flex flex-col space-y-4">
-          <div className="border-b border-slate-100 dark:border-zinc-800 pb-3">
-            <h2 className="text-base font-semibold text-slate-800 dark:text-zinc-200">
-              Active User Credentials (Phase 1 Status)
-            </h2>
-          </div>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-slate-400 block text-xs">Name</span>
-              <span className="font-medium text-slate-800 dark:text-zinc-300">{user?.name}</span>
+        {/* KPI Summary Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {kpis.map((kpi) => (
+            <Card key={kpi.title} className="flex items-center justify-between">
+              <div className="space-y-1.5">
+                <span className="text-xs font-semibold text-slate-400 dark:text-zinc-500">
+                  {kpi.title}
+                </span>
+                <h3 className="text-xl font-bold text-slate-800 dark:text-zinc-100">
+                  {kpi.value}
+                </h3>
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-pill inline-block ${
+                  kpi.changeType === 'up' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-500' :
+                  kpi.changeType === 'danger' ? 'bg-red-100 text-red-600 dark:bg-red-950/20 dark:text-red-500' :
+                  kpi.changeType === 'warning' ? 'bg-amber-100 text-amber-600 dark:bg-amber-950/20 dark:text-amber-500' :
+                  'bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400'
+                }`}>
+                  {kpi.change}
+                </span>
+              </div>
+              <div className={`p-3 rounded-card shrink-0 ${kpi.iconClass}`}>
+                <kpi.icon className="h-5 w-5" />
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Analytics Charts Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Sales Curve */}
+          <Card className="lg:col-span-2 space-y-4">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-50 dark:border-zinc-900">
+              <div>
+                <h4 className="text-sm font-bold text-slate-800 dark:text-zinc-200">Revenue Stream Today</h4>
+                <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-semibold">Real-time update intervals (Socket.IO)</p>
+              </div>
+              <Button variant="outline" size="sm">
+                Full Report <ArrowUpRight className="h-3 w-3 ml-1" />
+              </Button>
             </div>
-            <div>
-              <span className="text-slate-400 block text-xs">Email</span>
-              <span className="font-medium text-slate-800 dark:text-zinc-300">{user?.email}</span>
+            <SalesAreaChart />
+          </Card>
+
+          {/* Orders Channels Distribution */}
+          <Card className="space-y-4">
+            <div className="pb-2 border-b border-slate-50 dark:border-zinc-900">
+              <h4 className="text-sm font-bold text-slate-800 dark:text-zinc-200">Orders Distribution</h4>
+              <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-semibold">Today's active order channels</p>
             </div>
-            <div>
-              <span className="text-slate-400 block text-xs">Role</span>
-              <span className="font-medium text-slate-800 dark:text-zinc-300 uppercase">{user?.role}</span>
+            <OrdersDistributionPieChart />
+          </Card>
+        </div>
+
+        {/* Bottom Details Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Menu Performance */}
+          <Card className="lg:col-span-2 space-y-4">
+            <div className="pb-2 border-b border-slate-50 dark:border-zinc-900">
+              <h4 className="text-sm font-bold text-slate-800 dark:text-zinc-200">Top Performing Items</h4>
+              <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-semibold">Best-selling dishes measured by revenue contribution</p>
             </div>
-            <div>
-              <span className="text-slate-400 block text-xs">Email Verified</span>
-              <span className={`font-semibold ${user?.isEmailVerified ? 'text-emerald-500' : 'text-amber-500'}`}>
-                {user?.isEmailVerified ? 'Yes' : 'No'}
-              </span>
+            <MenuPerformanceBarChart />
+          </Card>
+
+          {/* Real-time Activity Feed */}
+          <Card className="space-y-4">
+            <div className="pb-2 border-b border-slate-50 dark:border-zinc-900">
+              <h4 className="text-sm font-bold text-slate-800 dark:text-zinc-200">System Activity Feed</h4>
+              <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-semibold">Live operations transactions updates</p>
             </div>
-          </div>
-        </Card>
+            
+            <div className="space-y-3.5">
+              {recentEvents.map((evt) => (
+                <div key={evt.id} className="flex justify-between items-start text-xs border-b border-slate-50 dark:border-zinc-900/50 pb-2.5 last:border-b-0 last:pb-0">
+                  <div className="space-y-0.5 max-w-[70%]">
+                    <p className="font-semibold text-slate-800 dark:text-zinc-200 truncate">{evt.action}</p>
+                    <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-semibold">Triggered by: {evt.user}</p>
+                  </div>
+                  <span className="text-[9px] text-slate-400 dark:text-zinc-500 shrink-0 font-medium">{evt.time}</span>
+                </div>
+              ))}
+            </div>
+
+            <Button variant="text" size="sm" className="w-full text-center text-xs mt-2 border border-slate-100 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-900">
+              View Activity Logs <ChevronRight className="h-3 w-3 ml-1" />
+            </Button>
+          </Card>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
