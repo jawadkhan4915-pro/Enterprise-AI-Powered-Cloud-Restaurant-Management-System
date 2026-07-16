@@ -8,11 +8,14 @@ const createOrder = catchAsync(async (req, res) => {
   // Retrieve active branch id if not supplied in body
   let { branchId } = req.body;
   if (!branchId) {
-    const branches = await restaurantRepository.getBranches();
+    // Get profile first to get restaurantId
+    let profile = await restaurantRepository.getProfile();
+    if (!profile) profile = await restaurantRepository.updateProfile({ name: 'RestaurantOS AI HQ' });
+    const branches = await restaurantRepository.getBranches(profile._id);
     if (branches.length > 0) {
       branchId = branches[0]._id;
     } else {
-      throw new ApiError(400, 'Restaurant branch is not configured. Create a branch in settings first.');
+      throw new ApiError(400, 'Restaurant branch is not configured. Create a branch in Settings first.');
     }
   }
 
