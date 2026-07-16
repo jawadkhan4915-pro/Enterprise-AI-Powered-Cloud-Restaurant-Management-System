@@ -9,6 +9,8 @@ const crmRoutes = require('./crm.routes');
 const reservationsRoutes = require('./reservations.routes');
 const employeesRoutes = require('./employees.routes');
 const financeRoutes = require('./finance.routes');
+const reportsRoutes = require('./reports.routes');
+const aiRoutes = require('./ai.routes');
 const ApiResponse = require('../../utils/ApiResponse');
 
 const router = express.Router();
@@ -28,5 +30,7 @@ router.use('/crm', crmRoutes);
 router.use('/reservations', reservationsRoutes);
 router.use('/employees', employeesRoutes);
 router.use('/finance', financeRoutes);
+router.use('/reports', reportsRoutes);
+router.use('/ai', aiRoutes);
 
 module.exports = router;
