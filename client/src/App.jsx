@@ -15,6 +15,19 @@ const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
 const VerifyEmailPage = lazy(() => import('./pages/auth/VerifyEmailPage'));
 const UnauthorizedPage = lazy(() => import('./pages/auth/UnauthorizedPage'));
 const DashboardPage = lazy(() => import('./pages/dashboard/DashboardPage'));
+const POSPage = lazy(() => import('./pages/pos/POSPage'));
+const OrdersPage = lazy(() => import('./pages/orders/OrdersPage'));
+const KitchenPage = lazy(() => import('./pages/kitchen/KitchenPage'));
+const ReservationsPage = lazy(() => import('./pages/reservations/ReservationsPage'));
+const MenuPage = lazy(() => import('./pages/menu/MenuPage'));
+const InventoryPage = lazy(() => import('./pages/inventory/InventoryPage'));
+const CRMPage = lazy(() => import('./pages/crm/CRMPage'));
+const EmployeesPage = lazy(() => import('./pages/employees/EmployeesPage'));
+const FinancePage = lazy(() => import('./pages/finance/FinancePage'));
+const ReportsPage = lazy(() => import('./pages/reports/ReportsPage'));
+const AIPage = lazy(() => import('./pages/ai/AIPage'));
+const SettingsPage = lazy(() => import('./pages/settings/SettingsPage'));
+const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-zinc-950">
@@ -55,6 +68,19 @@ export const App = () => {
 
           {/* Protected Routes */}
           <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+          <Route path="/pos" element={<ProtectedRoute><POSPage /></ProtectedRoute>} />
+          <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
+          <Route path="/kitchen" element={<ProtectedRoute><KitchenPage /></ProtectedRoute>} />
+          <Route path="/reservations" element={<ProtectedRoute><ReservationsPage /></ProtectedRoute>} />
+          <Route path="/menu" element={<ProtectedRoute><MenuPage /></ProtectedRoute>} />
+          <Route path="/inventory" element={<ProtectedRoute><InventoryPage /></ProtectedRoute>} />
+          <Route path="/crm" element={<ProtectedRoute><CRMPage /></ProtectedRoute>} />
+          <Route path="/employees" element={<ProtectedRoute><EmployeesPage /></ProtectedRoute>} />
+          <Route path="/finance" element={<ProtectedRoute><FinancePage /></ProtectedRoute>} />
+          <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
+          <Route path="/ai" element={<ProtectedRoute><AIPage /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
           {/* Error / Fallback Routes */}
           <Route path="/unauthorized" element={<UnauthorizedPage />} />

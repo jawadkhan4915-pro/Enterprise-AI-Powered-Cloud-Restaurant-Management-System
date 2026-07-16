@@ -1,0 +1,33 @@
+import React from 'react';
+import DashboardLayout from '../../layouts/DashboardLayout';
+import Card from '../../components/ui/Card';
+import { Package } from 'lucide-react';
+
+export const InventoryPage = () => {
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-zinc-50">
+            Inventory & Warehouses
+          </h1>
+          <p className="text-slate-500 text-sm mt-1">
+            Track ingredients stock levels, wastage levels, batch expiry metrics, and purchase orders. (Available in Phase 5)
+          </p>
+        </div>
+
+        <Card className="flex flex-col items-center justify-center h-96 border-dashed border-2 border-slate-200 dark:border-zinc-800">
+          <div className="p-4 bg-primary/10 rounded-full text-primary mb-4">
+            <Package className="h-8 w-8" />
+          </div>
+          <h3 className="font-bold text-slate-700 dark:text-zinc-200">Stock Control panel</h3>
+          <p className="text-xs text-slate-400 dark:text-zinc-500 mt-1 max-w-sm text-center">
+            Stock lists, replenishment orders, and expiry logs will be integrated here inside the supply chain system.
+          </p>
+        </Card>
+      </div>
+    </DashboardLayout>
+  );
+};
+
+export default InventoryPage;
