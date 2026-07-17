@@ -123,7 +123,6 @@ const orderSchema = new mongoose.Schema(
 orderSchema.index({ branchId: 1 });
 orderSchema.index({ tableId: 1 });
 orderSchema.index({ status: 1 });
-orderSchema.index({ orderNumber: 1 });
 orderSchema.index({ isDeleted: 1 });
 
 const Order = mongoose.model('Order', orderSchema);

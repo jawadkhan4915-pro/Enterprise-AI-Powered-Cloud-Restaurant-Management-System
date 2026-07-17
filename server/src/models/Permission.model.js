@@ -36,7 +36,6 @@ const permissionSchema = new mongoose.Schema(
 );
 
 // Indexes
-permissionSchema.index({ slug: 1 });
 permissionSchema.index({ module: 1 });
 
 const Permission = mongoose.model('Permission', permissionSchema);

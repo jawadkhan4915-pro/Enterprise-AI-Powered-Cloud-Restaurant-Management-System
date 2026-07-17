@@ -34,8 +34,6 @@ const roleSchema = new mongoose.Schema(
   }
 );
 
-roleSchema.index({ slug: 1 });
-
 const Role = mongoose.model('Role', roleSchema);
 
 module.exports = Role;
