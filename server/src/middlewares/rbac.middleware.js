@@ -5,7 +5,7 @@ const Role = require('../models/Role.model');
 const SYSTEM_ROLES_PERMISSIONS = {
   super_admin: ['*'], // wildcard access
   restaurant_owner: ['*'],
-  branch_manager: ['read_branch', 'update_branch', 'read_menu', 'read_orders', 'update_orders', 'read_inventory', 'update_inventory', 'read_employees', 'update_employees', 'read_finance', 'read_reports'],
+  branch_manager: ['read_branch', 'update_branch', 'read_menu', 'create_menu', 'update_menu', 'delete_menu', 'read_orders', 'update_orders', 'read_inventory', 'update_inventory', 'read_employees', 'update_employees', 'read_finance', 'read_reports'],
   cashier: ['read_menu', 'create_orders', 'read_orders', 'update_orders', 'manage_pos', 'read_customers', 'create_customers'],
   waiter: ['read_menu', 'create_orders', 'read_orders', 'update_orders', 'read_tables'],
   chef: ['read_orders', 'update_orders', 'manage_kitchen'],

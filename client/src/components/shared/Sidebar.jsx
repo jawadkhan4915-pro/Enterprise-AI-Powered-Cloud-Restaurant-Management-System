@@ -32,7 +32,7 @@ export const Sidebar = () => {
     { name: 'Orders', path: '/orders', icon: Receipt, permission: 'read_orders' },
     { name: 'Kitchen Display', path: '/kitchen', icon: ChefHat, permission: 'manage_kitchen' },
     { name: 'Reservations', path: '/reservations', icon: Calendar, permission: 'read_tables' },
-    { name: 'Menu Editor', path: '/menu', icon: MenuSquare, permission: 'read_menu' },
+    { name: 'Menu Editor', path: '/menu', icon: MenuSquare, permission: 'update_menu' },
     { name: 'Inventory', path: '/inventory', icon: Package, permission: 'read_inventory' },
     { name: 'CRM & Loyalty', path: '/crm', icon: Users, permission: 'read_customers' },
     { name: 'Staff Management', path: '/employees', icon: Users2, permission: 'read_employees' },
