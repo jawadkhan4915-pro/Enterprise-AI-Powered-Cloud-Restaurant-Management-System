@@ -20,6 +20,6 @@ router.route('/:id/status')
   .patch(checkPermission('update_orders'), orderController.updateOrderStatus);
 
 router.route('/:id/checkout')
-  .post(checkPermission('create_orders'), orderController.checkoutOrder);
+  .post(checkPermission('update_orders'), orderController.checkoutOrder);
 
 module.exports = router;

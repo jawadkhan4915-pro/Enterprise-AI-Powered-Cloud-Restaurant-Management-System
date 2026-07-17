@@ -160,6 +160,84 @@ const seedDatabase = async () => {
       await Category.insertMany(defaultCategories);
     }
 
+    // Seed default menu items (10 per category) if empty
+    const MenuItem = require('./models/MenuItem.model');
+    const menuItemCount = await MenuItem.countDocuments();
+    if (menuItemCount === 0) {
+      logger.info('Seeding 10 demo dishes per category...');
+      const dbCategories = await Category.find({ restaurantId: restaurant._id });
+      
+      const dishes = {
+        'Starters': [
+          { name: 'Garlic Bread', price: 5.99, desc: 'Toasted baguette with garlic butter and herbs.' },
+          { name: 'Mozzarella Sticks', price: 7.99, desc: 'Crispy breaded mozzarella with marinara sauce.' },
+          { name: 'Chicken Wings', price: 9.99, desc: 'Spicy buffalo chicken wings with blue cheese dip.' },
+          { name: 'Spring Rolls', price: 6.99, desc: 'Crispy pastry rolls filled with fresh vegetables.' },
+          { name: 'Nachos Grande', price: 11.99, desc: 'Tortilla chips with melted cheese, jalapenos, and salsa.' },
+          { name: 'Bruschetta', price: 8.99, desc: 'Grilled bread topped with diced tomatoes, garlic, and basil.' },
+          { name: 'Calamari Rings', price: 12.99, desc: 'Lightly battered and fried squid with lemon aioli.' },
+          { name: 'Stuffed Mushrooms', price: 9.99, desc: 'Mushroom caps stuffed with herbs and cream cheese.' },
+          { name: 'Onion Rings', price: 5.99, desc: 'Golden crispy battered onion rings.' },
+          { name: 'Tomato Soup', price: 6.99, desc: 'Rich and creamy slow-cooked tomato soup.' }
+        ],
+        'Main Course': [
+          { name: 'Grilled Salmon', price: 24.99, desc: 'Salmon fillet with asparagus and lemon herb butter.' },
+          { name: 'Ribeye Steak', price: 29.99, desc: 'Prime ribeye steak served with garlic mashed potatoes.' },
+          { name: 'Chicken Alfredo', price: 18.99, desc: 'Fettuccine pasta in rich, creamy alfredo sauce.' },
+          { name: 'Beef Burger', price: 14.99, desc: 'Gourmet beef patty with cheddar, lettuce, and fries.' },
+          { name: 'Margherita Pizza', price: 13.99, desc: 'Fresh mozzarella, tomato sauce, and basil leaves.' },
+          { name: 'Butter Chicken', price: 17.99, desc: 'Tender chicken in aromatic creamy tomato gravy.' },
+          { name: 'Vegetable Pad Thai', price: 15.99, desc: 'Stir-fried rice noodles with tofu and crushed peanuts.' },
+          { name: 'Seafood Risotto', price: 22.99, desc: 'Arborio rice cooked with shrimp, mussels, and scallops.' },
+          { name: 'Lamb Chops', price: 27.99, desc: 'Pan-seared lamb chops with rosemary red wine reduction.' },
+          { name: 'Spaghetti Bolognese', price: 16.99, desc: 'Classic pasta with slow-simmered minced beef sauce.' }
+        ],
+        'Desserts': [
+          { name: 'Chocolate Fudge Cake', price: 7.99, desc: 'Decadent triple chocolate cake with warm glaze.' },
+          { name: 'Apple Pie', price: 6.99, desc: 'Warm spiced apple pie in flaky pastry crust.' },
+          { name: 'New York Cheesecake', price: 8.99, desc: 'Creamy cheesecake on graham cracker crust.' },
+          { name: 'Crème Brûlée', price: 9.99, desc: 'Classic French vanilla custard with caramelized sugar.' },
+          { name: 'Tiramisu', price: 8.99, desc: 'Espresso-soaked ladyfingers with mascarpone cream.' },
+          { name: 'Warm Brownie', price: 7.99, desc: 'Rich chocolate brownie topped with vanilla ice cream.' },
+          { name: 'Panna Cotta', price: 6.99, desc: 'Vanilla bean panna cotta with raspberry coulis.' },
+          { name: 'Lava Cake', price: 8.99, desc: 'Warm cake with a molten chocolate core.' },
+          { name: 'Fruit Tart', price: 7.99, desc: 'Sweet pastry shell with pastry cream and fresh fruits.' },
+          { name: 'Macarons Plate', price: 9.99, desc: 'Assortment of five delicate French macarons.' }
+        ],
+        'Beverages': [
+          { name: 'Iced Americano', price: 3.99, desc: 'Espresso shots over cold water and ice.' },
+          { name: 'Fresh Orange Juice', price: 4.99, desc: 'Freshly squeezed sweet oranges.' },
+          { name: 'Strawberry Milkshake', price: 5.99, desc: 'Creamy milkshake blended with fresh strawberries.' },
+          { name: 'Coca Cola', price: 2.50, desc: 'Chilled carbonated soft drink.' },
+          { name: 'Sparkling Water', price: 3.00, desc: 'Refreshing carbonated mineral water.' },
+          { name: 'Craft Beer', price: 6.99, desc: 'Locally brewed golden pale ale.' },
+          { name: 'Lemon Mint Mojito', price: 5.99, desc: 'Muddled fresh mint, lime, and soda.' },
+          { name: 'Hot Matcha Latte', price: 4.99, desc: 'Stone-ground green tea with steamed milk.' },
+          { name: 'Cabernet Sauvignon', price: 9.99, desc: 'Glass of robust red wine with dark fruit notes.' },
+          { name: 'Jasmine Green Tea', price: 3.99, desc: 'Delicate floral steamed green tea.' }
+        ]
+      };
+
+      const itemsToSeed = [];
+      for (const cat of dbCategories) {
+        const dishList = dishes[cat.name] || [];
+        dishList.forEach((dish, idx) => {
+          itemsToSeed.push({
+            restaurantId: restaurant._id,
+            categoryId: cat._id,
+            name: dish.name,
+            description: dish.desc,
+            price: dish.price,
+            sku: `DS-${cat.slug.slice(0, 3).toUpperCase()}-${String(idx + 1).padStart(3, '0')}`,
+            isAvailable: true,
+            preparationTime: 12,
+          });
+        });
+      }
+      await MenuItem.insertMany(itemsToSeed);
+      logger.info('Successfully seeded 10 dishes per category!');
+    }
+
     // Seed default inventory items if empty
     const InventoryItem = require('./models/InventoryItem.model');
     const Supplier = require('./models/Supplier.model');
