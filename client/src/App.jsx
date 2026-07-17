@@ -70,7 +70,7 @@ export const App = () => {
 
           {/* Protected Routes */}
           <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-          <Route path="/pos" element={<ProtectedRoute><POSPage /></ProtectedRoute>} />
+          <Route path="/pos" element={<ProtectedRoute permission={['manage_pos', 'create_orders']}><POSPage /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
           <Route path="/kitchen" element={<ProtectedRoute><KitchenPage /></ProtectedRoute>} />
           <Route path="/reservations" element={<ProtectedRoute><ReservationsPage /></ProtectedRoute>} />

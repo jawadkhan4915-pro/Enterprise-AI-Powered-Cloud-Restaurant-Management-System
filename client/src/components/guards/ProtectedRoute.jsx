@@ -6,7 +6,7 @@ import Skeleton from '../ui/Skeleton';
 
 export const ProtectedRoute = ({ children, permission, roles }) => {
   const { isAuthenticated, loading, isInitialized } = useAuth();
-  const { hasPermission, hasRole } = usePermission();
+  const { hasPermission, hasAnyPermission, hasRole } = usePermission();
   const location = useLocation();
 
   if (!isInitialized || (loading && !isAuthenticated)) {
@@ -26,8 +26,13 @@ export const ProtectedRoute = ({ children, permission, roles }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (permission && !hasPermission(permission)) {
-    return <Navigate to="/unauthorized" replace />;
+  if (permission) {
+    const allowed = Array.isArray(permission) 
+      ? hasAnyPermission(permission) 
+      : hasPermission(permission);
+    if (!allowed) {
+      return <Navigate to="/unauthorized" replace />;
+    }
   }
 
   if (roles && !hasRole(roles)) {

@@ -24,11 +24,11 @@ import {
 export const Sidebar = () => {
   const dispatch = useDispatch();
   const sidebarOpen = useSelector((state) => state.ui.sidebarOpen);
-  const { hasPermission } = usePermission();
+  const { hasPermission, hasAnyPermission } = usePermission();
 
   const navigationItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, permission: 'read_auth' },
-    { name: 'POS Touch', path: '/pos', icon: ShoppingCart, permission: 'manage_pos' },
+    { name: 'POS Touch', path: '/pos', icon: ShoppingCart, permission: ['manage_pos', 'create_orders'] },
     { name: 'Orders', path: '/orders', icon: Receipt, permission: 'read_orders' },
     { name: 'Kitchen Display', path: '/kitchen', icon: ChefHat, permission: 'manage_kitchen' },
     { name: 'Reservations', path: '/reservations', icon: Calendar, permission: 'read_tables' },
@@ -45,7 +45,10 @@ export const Sidebar = () => {
 
   // Filter items user has rights to see
   const visibleItems = navigationItems.filter(
-    (item) => !item.permission || hasPermission(item.permission)
+    (item) => !item.permission || 
+      (Array.isArray(item.permission) 
+        ? hasAnyPermission(item.permission) 
+        : hasPermission(item.permission))
   );
 
   return (

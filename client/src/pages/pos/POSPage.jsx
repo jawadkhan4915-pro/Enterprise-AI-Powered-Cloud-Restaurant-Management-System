@@ -6,10 +6,12 @@ import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import api from '../../services/api';
+import usePermission from '../../hooks/usePermission';
 import { ShoppingCart, Search, Receipt, Trash2, Plus, Minus, Tag, Landmark, User, CreditCard } from 'lucide-react';
 
 export const POSPage = () => {
   const dispatch = useDispatch();
+  const { hasPermission } = usePermission();
 
   // Menu states
   const [categories, setCategories] = useState([]);
@@ -405,16 +407,19 @@ export const POSPage = () => {
                 onClick={handlePlaceOrder} 
                 variant="outline" 
                 loading={loading}
+                className={!hasPermission('manage_pos') ? 'col-span-2' : ''}
               >
                 Send to Kitchen
               </Button>
-              <Button 
-                onClick={() => setShowCheckout(true)} 
-                variant="primary"
-                disabled={cart.length === 0}
-              >
-                Pay & Checkout
-              </Button>
+              {hasPermission('manage_pos') && (
+                <Button 
+                  onClick={() => setShowCheckout(true)} 
+                  variant="primary"
+                  disabled={cart.length === 0}
+                >
+                  Pay & Checkout
+                </Button>
+              )}
             </div>
           </div>
         </div>

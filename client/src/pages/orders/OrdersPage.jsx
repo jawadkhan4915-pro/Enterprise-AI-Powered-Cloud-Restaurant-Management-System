@@ -6,10 +6,12 @@ import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Skeleton from '../../components/ui/Skeleton';
 import api from '../../services/api';
-import { Receipt, Search, Eye, Filter, Info, DollarSign } from 'lucide-react';
+import usePermission from '../../hooks/usePermission';
+import { Receipt, Search, Eye, Filter, Info, DollarSign, Printer } from 'lucide-react';
 
 export const OrdersPage = () => {
   const dispatch = useDispatch();
+  const { hasPermission } = usePermission();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchVal, setSearchVal] = useState('');
@@ -17,6 +19,92 @@ export const OrdersPage = () => {
 
   // Selected order details drawer/modal
   const [selectedOrder, setSelectedOrder] = useState(null);
+
+  const handlePrintInvoice = (order) => {
+    const printWindow = window.open('', '_blank', 'width=600,height=850');
+    const itemsHtml = order.items.map(item => `
+      <tr style="border-bottom: 1px dashed #ddd;">
+        <td style="padding: 6px 0; font-size: 13px;">${item.quantity}x ${item.name}</td>
+        <td style="padding: 6px 0; text-align: right; font-size: 13px;">$${(item.price * item.quantity).toFixed(2)}</td>
+      </tr>
+    `).join('');
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Invoice - ${order.orderNumber}</title>
+          <style>
+            body { font-family: 'Courier New', Courier, monospace; color: #000; padding: 20px; font-size: 14px; }
+            .header { text-align: center; margin-bottom: 20px; }
+            .header h2 { margin: 0 0 5px 0; font-size: 18px; text-transform: uppercase; }
+            .header p { margin: 0; font-size: 12px; color: #555; }
+            .details { margin-bottom: 15px; font-size: 12px; line-height: 1.4; border-bottom: 1px dashed #000; padding-bottom: 10px; }
+            .table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+            .totals { margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px; font-size: 13px; }
+            .total-line { display: flex; justify-content: space-between; margin-bottom: 5px; }
+            .grand-total { font-weight: bold; font-size: 15px; border-top: 1px double #000; padding-top: 5px; margin-top: 5px; }
+            .footer { text-align: center; margin-top: 30px; font-size: 11px; font-style: italic; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h2>RestaurantOS AI</h2>
+            <p>London Central Branch</p>
+            <p>Tel: +44 20 7946 0958</p>
+          </div>
+          <div class="details">
+            <div><strong>Order:</strong> ${order.orderNumber}</div>
+            <div><strong>Type:</strong> ${order.orderType.replace('_', ' ').toUpperCase()}</div>
+            ${order.tableId?.number ? `<div><strong>Table:</strong> #${order.tableId.number}</div>` : ''}
+            <div><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</div>
+            ${order.customerDetails?.name ? `<div><strong>Customer:</strong> ${order.customerDetails.name}</div>` : ''}
+          </div>
+          <table class="table">
+            <thead>
+              <tr style="border-bottom: 1px solid #000;">
+                <th style="text-align: left; font-size: 12px; padding-bottom: 5px;">Item</th>
+                <th style="text-align: right; font-size: 12px; padding-bottom: 5px;">Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsHtml}
+            </tbody>
+          </table>
+          <div class="totals">
+            <div class="total-line">
+              <span>Subtotal:</span>
+              <span>$${order.subTotal.toFixed(2)}</span>
+            </div>
+            <div class="total-line">
+              <span>Tax (${order.tax.rate}%):</span>
+              <span>$${order.tax.amount.toFixed(2)}</span>
+            </div>
+            ${order.discount?.amount > 0 ? `
+              <div class="total-line" style="color: #000;">
+                <span>Discount:</span>
+                <span>-$${order.discount.amount.toFixed(2)}</span>
+              </div>
+            ` : ''}
+            <div class="total-line grand-total">
+              <span>GRAND TOTAL:</span>
+              <span>$${order.grandTotal.toFixed(2)}</span>
+            </div>
+          </div>
+          <div class="footer">
+            <p>Thank you for dining with us!</p>
+            <p>Powered by RestaurantOS AI</p>
+          </div>
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(function() { window.close(); }, 500);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
 
   useEffect(() => {
     fetchOrders();
@@ -210,6 +298,19 @@ export const OrdersPage = () => {
                   <span>${selectedOrder.grandTotal.toFixed(2)}</span>
                 </div>
               </div>
+
+              {hasPermission('manage_pos') && (
+                <div className="pt-4 border-t border-slate-200 dark:border-zinc-800">
+                  <Button 
+                    onClick={() => handlePrintInvoice(selectedOrder)} 
+                    variant="primary" 
+                    className="w-full flex items-center justify-center gap-2 py-2.5 animate-fade-in"
+                    icon={Printer}
+                  >
+                    Print Receipt Invoice
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         )}
