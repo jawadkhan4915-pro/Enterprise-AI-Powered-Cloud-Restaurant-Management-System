@@ -116,10 +116,20 @@ const checkoutOrder = async (id, paymentDetails) => {
   return order;
 };
 
+const updateOrder = async (id, updateData) => {
+  const order = await Order.findOneAndUpdate(
+    { _id: id, isDeleted: false },
+    { $set: updateData },
+    { new: true }
+  ).populate('tableId', 'number');
+  return order;
+};
+
 module.exports = {
   createOrder,
   getOrders,
   getOrderById,
   updateOrderStatus,
   checkoutOrder,
+  updateOrder,
 };

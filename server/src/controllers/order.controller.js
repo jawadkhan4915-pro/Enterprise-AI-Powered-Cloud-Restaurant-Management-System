@@ -114,10 +114,27 @@ const checkoutOrder = catchAsync(async (req, res) => {
   res.send(new ApiResponse(200, { order }, 'Order paid and checked out successfully'));
 });
 
+const updateOrder = catchAsync(async (req, res) => {
+  const order = await orderRepository.updateOrder(req.params.id, req.body);
+  if (!order) {
+    throw new ApiError(404, 'Order ticket not found');
+  }
+
+  // Emit Socket.IO event to alert POS and KDS
+  const io = req.app.get('io');
+  if (io) {
+    io.emit('order_updated', order);
+    io.emit('table_status_sync');
+  }
+
+  res.send(new ApiResponse(200, { order }, 'Order ticket updated successfully'));
+});
+
 module.exports = {
   createOrder,
   getOrdersList,
   getOrderDetail,
   updateOrderStatus,
   checkoutOrder,
+  updateOrder,
 };

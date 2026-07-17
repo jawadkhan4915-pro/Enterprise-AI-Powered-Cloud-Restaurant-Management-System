@@ -28,6 +28,9 @@ export const POSPage = () => {
   const [discountAmount, setDiscountAmount] = useState(0);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [activeOrders, setActiveOrders] = useState([]);
+  const [loadedOrderId, setLoadedOrderId] = useState(null);
+  const [loadedOrderNumber, setLoadedOrderNumber] = useState('');
 
   // Checkout modal
   const [showCheckout, setShowCheckout] = useState(false);
@@ -36,7 +39,21 @@ export const POSPage = () => {
 
   useEffect(() => {
     fetchPOSData();
+    fetchActiveOrders();
   }, []);
+
+  const fetchActiveOrders = async () => {
+    try {
+      const res = await api.get('/orders?limit=100');
+      // Filter out completed and cancelled orders
+      const active = res.data.data.items.filter(
+        (o) => o.status !== 'completed' && o.status !== 'cancelled' && o.paymentStatus !== 'paid'
+      );
+      setActiveOrders(active);
+    } catch (err) {
+      console.error('Error loading active orders list', err);
+    }
+  };
 
   const fetchPOSData = async () => {
     try {
@@ -62,6 +79,39 @@ export const POSPage = () => {
     } catch (err) {
       dispatch(addToast({ message: 'Error retrieving POS terminals data', type: 'error' }));
     }
+  };
+
+  const handleRecallOrder = (orderId) => {
+    if (!orderId) {
+      setLoadedOrderId(null);
+      setLoadedOrderNumber('');
+      setCart([]);
+      setOrderType('dine_in');
+      setSelectedTableId('');
+      setCustomerName('');
+      setCustomerPhone('');
+      setDiscountCode('');
+      setDiscountAmount(0);
+      return;
+    }
+    const order = activeOrders.find((o) => o._id === orderId);
+    if (!order) return;
+    setLoadedOrderId(order._id);
+    setLoadedOrderNumber(order.orderNumber);
+    const cartItems = order.items.map((item) => ({
+      menuItemId: item.menuItemId?._id || item.menuItemId,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+    }));
+    setCart(cartItems);
+    setOrderType(order.orderType);
+    setSelectedTableId(order.tableId?._id || order.tableId || '');
+    setCustomerName(order.customerDetails?.name || '');
+    setCustomerPhone(order.customerDetails?.phone || '');
+    setDiscountCode(order.discount?.code || '');
+    setDiscountAmount(order.discount?.amount || 0);
+    dispatch(addToast({ message: `Recalled active order ${order.orderNumber}`, type: 'success' }));
   };
 
   // Cart actions
@@ -135,8 +185,14 @@ export const POSPage = () => {
         customerDetails: { name: customerName, phone: customerPhone },
       };
 
-      const res = await api.post('/orders', orderPayload);
-      const newOrder = res.data.data.order;
+      if (loadedOrderId) {
+        await api.put(`/orders/${loadedOrderId}`, orderPayload);
+        dispatch(addToast({ message: `Order ${loadedOrderNumber} updated successfully`, type: 'success' }));
+      } else {
+        const res = await api.post('/orders', orderPayload);
+        const newOrder = res.data.data.order;
+        dispatch(addToast({ message: `Order ${newOrder.orderNumber} placed successfully`, type: 'success' }));
+      }
 
       // Reset cart
       setCart([]);
@@ -145,8 +201,9 @@ export const POSPage = () => {
       setSelectedTableId('');
       setCustomerName('');
       setCustomerPhone('');
-
-      dispatch(addToast({ message: `Order ${newOrder.orderNumber} placed successfully`, type: 'success' }));
+      setLoadedOrderId(null);
+      setLoadedOrderNumber('');
+      fetchActiveOrders();
     } catch (err) {
       dispatch(addToast({ message: 'Failed to place order ticket', type: 'error' }));
     } finally {
@@ -171,9 +228,13 @@ export const POSPage = () => {
         customerDetails: { name: customerName, phone: customerPhone },
       };
 
-      // 1. Create order
-      const orderRes = await api.post('/orders', orderPayload);
-      const orderId = orderRes.data.data.order._id;
+      let orderId = loadedOrderId;
+      if (loadedOrderId) {
+        await api.put(`/orders/${loadedOrderId}`, orderPayload);
+      } else {
+        const orderRes = await api.post('/orders', orderPayload);
+        orderId = orderRes.data.data.order._id;
+      }
 
       // 2. Pay order directly
       await api.post(`/orders/${orderId}/checkout`, {
@@ -188,9 +249,12 @@ export const POSPage = () => {
       setSelectedTableId('');
       setCustomerName('');
       setCustomerPhone('');
+      setLoadedOrderId(null);
+      setLoadedOrderNumber('');
       setShowCheckout(false);
 
       dispatch(addToast({ message: 'Simulated payment checkout completed successfully!', type: 'success' }));
+      fetchActiveOrders();
     } catch (err) {
       dispatch(addToast({ message: 'Checkout transaction failed', type: 'error' }));
     } finally {
@@ -290,9 +354,26 @@ export const POSPage = () => {
           {/* Header */}
           <div className="p-4 border-b border-slate-100 dark:border-zinc-900 flex items-center justify-between bg-slate-50/50 dark:bg-zinc-900/30">
             <span className="font-bold text-sm text-slate-800 dark:text-zinc-100 flex items-center">
-              <Receipt className="h-4.5 w-4.5 mr-2 text-primary" /> Active Ticket
+              <Receipt className="h-4.5 w-4.5 mr-2 text-primary" /> {loadedOrderNumber ? `Editing ${loadedOrderNumber}` : 'Active Ticket'}
             </span>
             <span className="text-[10px] text-slate-400 font-semibold">{cart.length} items</span>
+          </div>
+
+          {/* Recall Active Order Dropdown */}
+          <div className="px-4 py-2 border-b border-slate-100 dark:border-zinc-900 flex flex-col space-y-1 bg-slate-50/20 dark:bg-zinc-900/10 shrink-0">
+            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Recall / Edit Active Order</label>
+            <select
+              value={loadedOrderId || ''}
+              onChange={(e) => handleRecallOrder(e.target.value)}
+              className="px-2 py-1.5 text-[11px] border bg-white border-slate-200 rounded-input focus:outline-none dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-200 font-bold text-slate-700"
+            >
+              <option value="">-- [ New Ticket / Clear Cart ] --</option>
+              {activeOrders.map(o => (
+                <option key={o._id} value={o._id}>
+                  {o.orderNumber} - {o.orderType === 'dine_in' ? `Table #${o.tableId?.number || '?'}` : o.customerDetails?.name || 'Walk-in'} ({o.status})
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Table select & customer details */}
@@ -409,7 +490,7 @@ export const POSPage = () => {
                 loading={loading}
                 className={!hasPermission('manage_pos') ? 'col-span-2' : ''}
               >
-                Send to Kitchen
+                {loadedOrderId ? 'Update Ticket' : 'Send to Kitchen'}
               </Button>
               {hasPermission('manage_pos') && (
                 <Button 

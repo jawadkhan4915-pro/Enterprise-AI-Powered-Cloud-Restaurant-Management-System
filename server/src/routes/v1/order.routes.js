@@ -13,7 +13,8 @@ router.route('/')
   .post(checkPermission('create_orders'), orderController.createOrder);
 
 router.route('/:id')
-  .get(orderController.getOrderDetail);
+  .get(orderController.getOrderDetail)
+  .put(checkPermission('update_orders'), orderController.updateOrder);
 
 router.route('/:id/status')
   .patch(checkPermission('update_orders'), orderController.updateOrderStatus);
