@@ -1,10 +1,13 @@
 const transporter = require('../config/mailer');
 const config = require('../config/env');
 const logger = require('../config/logger');
+const NotificationLog = require('../models/NotificationLog.model');
 const {
   getVerificationEmailTemplate,
   getPasswordResetTemplate,
-  getOTPTemplate
+  getOTPTemplate,
+  getReceiptEmailTemplate,
+  getReservationEmailTemplate
 } = require('../utils/email.templates');
 
 /**
@@ -72,9 +75,68 @@ const sendOTPEmail = async (to, name, code) => {
   return sendEmail(to, subject, html);
 };
 
+/**
+ * Send order receipt email
+ * @param {string} to 
+ * @param {string} name 
+ * @param {object} order 
+ * @param {string} branchName 
+ * @returns {Promise}
+ */
+const sendOrderReceiptEmail = async (to, name, order, branchName) => {
+  const subject = `Your Receipt for Order ${order.orderNumber}`;
+  const html = getReceiptEmailTemplate(order, branchName);
+  const info = await sendEmail(to, subject, html);
+  
+  let status = 'failed';
+  if (info) {
+    status = info.messageId === 'logged-to-console-id' ? 'logged' : 'sent';
+  }
+
+  await NotificationLog.create({
+    recipient: to,
+    channel: 'email',
+    type: 'receipt',
+    status,
+    subject,
+    body: `Receipt for order ${order.orderNumber}. Grand Total: $${order.grandTotal.toFixed(2)}`,
+  });
+};
+
+/**
+ * Send reservation email
+ * @param {string} to 
+ * @param {object} reservation 
+ * @param {string} branchName 
+ * @param {string} statusMessage 
+ * @param {string} type 
+ * @returns {Promise}
+ */
+const sendReservationEmail = async (to, reservation, branchName, statusMessage, type) => {
+  const subject = `Reservation Update: ${statusMessage.split('.')[0]}`;
+  const html = getReservationEmailTemplate(reservation, branchName, statusMessage);
+  const info = await sendEmail(to, subject, html);
+  
+  let status = 'failed';
+  if (info) {
+    status = info.messageId === 'logged-to-console-id' ? 'logged' : 'sent';
+  }
+
+  await NotificationLog.create({
+    recipient: to,
+    channel: 'email',
+    type,
+    status,
+    subject,
+    body: statusMessage,
+  });
+};
+
 module.exports = {
   sendEmail,
   sendVerificationEmail,
   sendResetPasswordEmail,
   sendOTPEmail,
+  sendOrderReceiptEmail,
+  sendReservationEmail,
 };

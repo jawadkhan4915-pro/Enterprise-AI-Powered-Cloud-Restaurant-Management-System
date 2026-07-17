@@ -3,6 +3,8 @@ const ApiResponse = require('../utils/ApiResponse');
 const orderRepository = require('../repositories/order.repository');
 const restaurantRepository = require('../repositories/restaurant.repository');
 const ApiError = require('../utils/ApiError');
+const Customer = require('../models/Customer.model');
+const logger = require('../config/logger');
 
 const createOrder = catchAsync(async (req, res) => {
   // Retrieve active branch id if not supplied in body
@@ -82,6 +84,31 @@ const checkoutOrder = catchAsync(async (req, res) => {
   if (io) {
     io.emit('order_updated', order);
     io.emit('table_status_sync');
+  }
+
+  // Trigger notifications asynchronously to keep checkout responsive
+  if (order.customerDetails && order.customerDetails.phone) {
+    (async () => {
+      try {
+        const customer = await Customer.findOne({ phone: order.customerDetails.phone, isDeleted: false });
+        const branches = await restaurantRepository.getBranches();
+        const branch = branches.find(b => b._id.toString() === order.branchId.toString());
+        const branchName = branch ? branch.name : 'London Central';
+
+        // 1. Send Invoice Email if customer email exists
+        if (customer && customer.email) {
+          const emailService = require('../services/email.service');
+          await emailService.sendOrderReceiptEmail(customer.email, customer.name, order, branchName);
+        }
+
+        // 2. Send SMS alert
+        const smsService = require('../services/sms.service');
+        const smsMsg = `Thank you for dining with us! Your order ${order.orderNumber} receipt total is $${order.grandTotal.toFixed(2)} paid via ${order.paymentMethod.toUpperCase()}.`;
+        await smsService.sendSMS(order.customerDetails.phone, smsMsg, 'receipt');
+      } catch (err) {
+        logger.error('Failed to trigger checkout notifications:', err);
+      }
+    })();
   }
 
   res.send(new ApiResponse(200, { order }, 'Order paid and checked out successfully'));
