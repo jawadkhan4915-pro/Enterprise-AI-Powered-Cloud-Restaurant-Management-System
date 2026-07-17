@@ -7,7 +7,9 @@ const Customer = require('../models/Customer.model');
 const logger = require('../config/logger');
 
 const getDefaultBranchId = async () => {
-  const branches = await restaurantRepo.getBranches();
+  let profile = await restaurantRepo.getProfile();
+  if (!profile) profile = await restaurantRepo.updateProfile({ name: 'RestaurantOS AI HQ' });
+  const branches = await restaurantRepo.getBranches(profile._id);
   if (!branches.length) throw new ApiError(400, 'No branch configured. Add a branch in Settings first.');
   return branches[0]._id;
 };

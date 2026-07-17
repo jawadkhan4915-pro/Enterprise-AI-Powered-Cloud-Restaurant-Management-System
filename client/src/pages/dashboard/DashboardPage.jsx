@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import Card from '../../components/ui/Card';
@@ -23,6 +24,7 @@ import {
 
 export const DashboardPage = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [time, setTime] = useState(new Date());
 
   // Real-time clock refresh
@@ -55,6 +57,7 @@ export const DashboardPage = () => {
       changeType: "up",
       icon: TrendingUp,
       iconClass: "bg-emerald-100 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-500",
+      path: "/reports",
     },
     {
       title: "Active Occupancy",
@@ -63,6 +66,7 @@ export const DashboardPage = () => {
       changeType: "neutral",
       icon: Users,
       iconClass: "bg-blue-100 text-blue-600 dark:bg-blue-950/30 dark:text-blue-500",
+      path: "/reservations",
     },
     {
       title: "Kitchen Queue",
@@ -71,6 +75,7 @@ export const DashboardPage = () => {
       changeType: "warning",
       icon: ChefHat,
       iconClass: "bg-purple-100 text-purple-600 dark:bg-purple-950/30 dark:text-purple-500",
+      path: "/kitchen",
     },
     {
       title: "Inventory Alert",
@@ -79,6 +84,7 @@ export const DashboardPage = () => {
       changeType: "danger",
       icon: AlertTriangle,
       iconClass: "bg-red-100 text-red-600 dark:bg-red-950/30 dark:text-red-500",
+      path: "/inventory",
     },
   ];
 
@@ -122,7 +128,7 @@ export const DashboardPage = () => {
         {/* KPI Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {kpis.map((kpi) => (
-            <Card key={kpi.title} className="flex items-center justify-between">
+            <Card key={kpi.title} onClick={() => navigate(kpi.path)} className="flex items-center justify-between">
               <div className="space-y-1.5">
                 <span className="text-xs font-semibold text-slate-400 dark:text-zinc-500">
                   {kpi.title}
@@ -155,7 +161,7 @@ export const DashboardPage = () => {
                 <h4 className="text-sm font-bold text-slate-800 dark:text-zinc-200">Revenue Stream Today</h4>
                 <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-semibold">Real-time update intervals (Socket.IO)</p>
               </div>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => navigate('/reports')}>
                 Full Report <ArrowUpRight className="h-3 w-3 ml-1" />
               </Button>
             </div>
