@@ -31,6 +31,11 @@ const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'));
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const HelpCenterPage = lazy(() => import('./pages/help/HelpCenterPage'));
 
+// New portals
+const CustomerOrderPage = lazy(() => import('./pages/customer/CustomerOrderPage'));
+const CustomerReservationPage = lazy(() => import('./pages/customer/CustomerReservationPage'));
+const RiderDeliveriesPage = lazy(() => import('./pages/rider/RiderDeliveriesPage'));
+
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-zinc-950">
     <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -84,6 +89,11 @@ export const App = () => {
           <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/help" element={<ProtectedRoute><HelpCenterPage /></ProtectedRoute>} />
+
+          {/* Portal Routes */}
+          <Route path="/customer/order" element={<ProtectedRoute roles="customer"><CustomerOrderPage /></ProtectedRoute>} />
+          <Route path="/customer/reserve" element={<ProtectedRoute roles="customer"><CustomerReservationPage /></ProtectedRoute>} />
+          <Route path="/rider/deliveries" element={<ProtectedRoute roles="delivery_rider"><RiderDeliveriesPage /></ProtectedRoute>} />
 
           {/* Fallback & Home Routes */}
           <Route path="/unauthorized" element={<UnauthorizedPage />} />

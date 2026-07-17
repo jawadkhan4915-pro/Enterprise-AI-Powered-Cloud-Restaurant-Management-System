@@ -66,7 +66,6 @@ const seedDatabase = async () => {
       logger.info('Default roles seeded successfully.');
     }
 
-    // Seed default test users if empty
     const User = require('./models/User.model');
     const demoUsers = [
       { name: 'Owner User', email: 'owner@test.com', role: 'restaurant_owner' },
@@ -75,7 +74,9 @@ const seedDatabase = async () => {
       { name: 'Waiter User', email: 'waiter@test.com', role: 'waiter' },
       { name: 'Chef User', email: 'chef@test.com', role: 'chef' },
       { name: 'Inventory User', email: 'inventory@test.com', role: 'inventory_manager' },
-      { name: 'Accountant User', email: 'accountant@test.com', role: 'accountant' }
+      { name: 'Accountant User', email: 'accountant@test.com', role: 'accountant' },
+      { name: 'Customer User', email: 'customer@test.com', role: 'customer' },
+      { name: 'Rider User', email: 'rider@test.com', role: 'delivery_rider' }
     ];
 
     for (const demo of demoUsers) {

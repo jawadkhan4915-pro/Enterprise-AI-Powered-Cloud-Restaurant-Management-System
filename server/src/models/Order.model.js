@@ -95,6 +95,10 @@ const orderSchema = new mongoose.Schema(
       name: { type: String, default: '' },
       phone: { type: String, default: '' },
     },
+    deliveryAddress: {
+      type: String,
+      default: '',
+    },
     orderNumber: {
       type: String,
       required: true,

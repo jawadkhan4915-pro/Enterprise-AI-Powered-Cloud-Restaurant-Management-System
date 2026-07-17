@@ -22,9 +22,15 @@ export const LoginPage = () => {
   });
 
   const onSubmit = async (data) => {
-    const success = await login(data);
-    if (success) {
-      navigate('/dashboard');
+    const loggedInUser = await login(data);
+    if (loggedInUser) {
+      if (loggedInUser.role === 'customer') {
+        navigate('/customer/order');
+      } else if (loggedInUser.role === 'delivery_rider') {
+        navigate('/rider/deliveries');
+      } else {
+        navigate('/dashboard');
+      }
     }
   };
 
@@ -40,7 +46,9 @@ export const LoginPage = () => {
     { role: 'Waiter', email: 'waiter@test.com', color: 'bg-purple-500/10 text-purple-600 dark:text-purple-400' },
     { role: 'Chef', email: 'chef@test.com', color: 'bg-orange-500/10 text-orange-600 dark:text-orange-400' },
     { role: 'Inventory', email: 'inventory@test.com', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
-    { role: 'Accountant', email: 'accountant@test.com', color: 'bg-teal-500/10 text-teal-650 dark:text-teal-400' }
+    { role: 'Accountant', email: 'accountant@test.com', color: 'bg-teal-500/10 text-teal-650 dark:text-teal-400' },
+    { role: 'Customer', email: 'customer@test.com', color: 'bg-rose-500/10 text-rose-600 dark:text-rose-400' },
+    { role: 'Rider', email: 'rider@test.com', color: 'bg-sky-500/10 text-sky-600 dark:text-sky-400' }
   ];
 
   return (

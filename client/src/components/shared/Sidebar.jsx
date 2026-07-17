@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { toggleSidebar } from '../../redux/slices/ui.slice';
 import usePermission from '../../hooks/usePermission';
+import useAuth from '../../hooks/useAuth';
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -25,6 +26,7 @@ export const Sidebar = () => {
   const dispatch = useDispatch();
   const sidebarOpen = useSelector((state) => state.ui.sidebarOpen);
   const { hasPermission, hasAnyPermission } = usePermission();
+  const { user } = useAuth();
 
   const navigationItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, permission: 'read_auth' },
@@ -44,12 +46,25 @@ export const Sidebar = () => {
   ];
 
   // Filter items user has rights to see
-  const visibleItems = navigationItems.filter(
+  let visibleItems = navigationItems.filter(
     (item) => !item.permission || 
       (Array.isArray(item.permission) 
         ? hasAnyPermission(item.permission) 
         : hasPermission(item.permission))
   );
+
+  if (user?.role === 'customer') {
+    visibleItems = [
+      { name: 'Order Online', path: '/customer/order', icon: ShoppingCart },
+      { name: 'Book Reservation', path: '/customer/reserve', icon: Calendar },
+      { name: 'Help Center', path: '/help', icon: HelpCircle },
+    ];
+  } else if (user?.role === 'delivery_rider') {
+    visibleItems = [
+      { name: 'Active Deliveries', path: '/rider/deliveries', icon: ShoppingCart },
+      { name: 'Help Center', path: '/help', icon: HelpCircle },
+    ];
+  }
 
   return (
     <>

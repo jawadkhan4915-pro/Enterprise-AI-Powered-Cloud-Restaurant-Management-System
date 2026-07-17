@@ -11,10 +11,10 @@ export const useAuth = () => {
     const resultAction = await dispatch(login(credentials));
     if (login.fulfilled.match(resultAction)) {
       dispatch(addToast({ message: 'Welcome back!', type: 'success' }));
-      return true;
+      return resultAction.payload;
     } else {
       dispatch(addToast({ message: resultAction.payload || 'Login failed', type: 'error' }));
-      return false;
+      return null;
     }
   }, [dispatch]);
 
