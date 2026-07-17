@@ -9,11 +9,15 @@ export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    // Connect to host origin domain and port dynamically (ideal for single-host setup!)
-    const socketUrl = window.location.origin;
+    // In dev: Vite proxies /socket.io → localhost:5000 (ws: true in vite.config.js)
+    // In prod: server serves both API and client from same origin
+    const socketUrl = import.meta.env.VITE_SOCKET_URL || window.location.origin;
     const socketConnection = io(socketUrl, {
-      transports: ['websocket'],
+      transports: ['websocket', 'polling'],
       autoConnect: true,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
     });
 
     setSocket(socketConnection);

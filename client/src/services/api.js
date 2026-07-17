@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 const getAccessToken = () => localStorage.getItem('accessToken');
 const getRefreshToken = () => localStorage.getItem('refreshToken');
 const setTokens = (access, refresh) => {
@@ -8,7 +10,6 @@ const clearTokens = () => {
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
 };
-import axios from 'axios';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api/v1',

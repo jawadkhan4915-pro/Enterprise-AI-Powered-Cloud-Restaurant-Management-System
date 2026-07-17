@@ -66,6 +66,22 @@ const seedDatabase = async () => {
       logger.info('Default roles seeded successfully.');
     }
 
+    // Seed default test user if empty
+    const User = require('./models/User.model');
+    const hasOwner = await User.findOne({ email: 'owner@test.com' });
+    if (!hasOwner) {
+      logger.info('Seeding default test owner user...');
+      await User.create({
+        name: 'Owner User',
+        email: 'owner@test.com',
+        password: 'Password@123',
+        role: 'restaurant_owner',
+        isEmailVerified: true,
+        isActive: true,
+      });
+      logger.info('Default test owner user seeded successfully.');
+    }
+
     // Seed Restaurant & Branch if empty
     const Restaurant = require('./models/Restaurant.model');
     const Branch = require('./models/Branch.model');
