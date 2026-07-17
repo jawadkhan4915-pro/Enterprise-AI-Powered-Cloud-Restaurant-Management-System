@@ -48,7 +48,8 @@ export const OrdersPage = () => {
         </head>
         <body>
           <div class="header">
-            <h2>RestaurantOS AI</h2>
+            <h2>${order.paymentStatus === 'paid' ? 'TAX INVOICE' : 'CUSTOMER BILL'}</h2>
+            <p>RestaurantOS AI</p>
             <p>London Central Branch</p>
             <p>Tel: +44 20 7946 0958</p>
           </div>
@@ -307,7 +308,7 @@ export const OrdersPage = () => {
                     className="w-full flex items-center justify-center gap-2 py-2.5 animate-fade-in"
                     icon={Printer}
                   >
-                    Print Receipt Invoice
+                    {selectedOrder.paymentStatus === 'paid' ? 'Print Receipt Invoice' : 'Print Customer Bill'}
                   </Button>
                 </div>
               )}

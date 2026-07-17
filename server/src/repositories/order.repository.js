@@ -109,8 +109,8 @@ const checkoutOrder = async (id, paymentDetails) => {
 
   // If table is bound, update Table status to dirty or available
   if (order.tableId) {
-    // Mark as dirty so wait staff knows to clean it
-    await Table.findByIdAndUpdate(order.tableId, { status: 'dirty' });
+    // Mark as available so the table becomes green (free) in the reservations panel
+    await Table.findByIdAndUpdate(order.tableId, { status: 'available' });
   }
 
   return order;

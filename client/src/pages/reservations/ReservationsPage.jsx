@@ -364,14 +364,11 @@ export const ReservationsPage = () => {
               ) : (
                 tables.map((table) => {
                   const isCircle = table.shape === 'circle';
-                  const isOccupied = table.status === 'occupied';
-                  const isReserved = table.status === 'reserved';
-                  const isDirty = table.status === 'dirty';
+                  const isFree = table.status === 'available';
                   
-                  const bgColors = isOccupied ? 'bg-red-500 border-red-650 text-white' : 
-                                   isReserved ? 'bg-blue-555 border-blue-650 text-white' :
-                                   isDirty ? 'bg-amber-500 border-amber-600 text-white' :
-                                   'bg-white border-slate-200 text-slate-700 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-200';
+                  const bgColors = isFree 
+                    ? 'bg-emerald-500 border-emerald-600 text-white hover:bg-emerald-600' 
+                    : 'bg-red-500 border-red-600 text-white hover:bg-red-600';
 
                   return (
                     <div
