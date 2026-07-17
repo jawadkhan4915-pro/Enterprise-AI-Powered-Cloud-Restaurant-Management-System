@@ -2,6 +2,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
+import { Key } from 'lucide-react';
 import { addToast } from '../../redux/slices/ui.slice';
 import useAuth from '../../hooks/useAuth';
 import AuthLayout from '../../layouts/AuthLayout';
@@ -13,7 +14,7 @@ export const LoginPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm({
     defaultValues: {
       email: '',
       password: '',
@@ -25,6 +26,11 @@ export const LoginPage = () => {
     if (success) {
       navigate('/dashboard');
     }
+  };
+
+  const handleFillDemo = () => {
+    setValue('email', 'owner@test.com', { shouldValidate: true });
+    setValue('password', 'Password@123', { shouldValidate: true });
   };
 
   return (
@@ -80,6 +86,34 @@ export const LoginPage = () => {
           Sign in
         </Button>
       </form>
+
+      {/* Demo Credentials Box */}
+      <div className="mt-6 p-4 rounded-xl border border-slate-100 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/30 backdrop-blur-sm transition-all duration-300">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary dark:bg-primary/20 shrink-0">
+              <Key className="w-4 h-4" />
+            </div>
+            <div className="text-left">
+              <h4 className="text-xs font-semibold text-slate-800 dark:text-zinc-200">
+                Demo Credentials
+              </h4>
+              <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-mono mt-0.5">
+                owner@test.com / Password@123
+              </p>
+            </div>
+          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={handleFillDemo}
+            className="shrink-0"
+          >
+            Auto Fill
+          </Button>
+        </div>
+      </div>
 
       <div className="mt-6 text-center text-xs text-slate-500 dark:text-zinc-400">
         Don't have an account?{' '}
