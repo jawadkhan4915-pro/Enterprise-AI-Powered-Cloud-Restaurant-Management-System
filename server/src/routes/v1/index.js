@@ -11,6 +11,7 @@ const employeesRoutes = require('./employees.routes');
 const financeRoutes = require('./finance.routes');
 const reportsRoutes = require('./reports.routes');
 const aiRoutes = require('./ai.routes');
+const notificationRoutes = require('./notification.routes');
 const ApiResponse = require('../../utils/ApiResponse');
 
 const router = express.Router();
@@ -32,5 +33,6 @@ router.use('/employees', employeesRoutes);
 router.use('/finance', financeRoutes);
 router.use('/reports', reportsRoutes);
 router.use('/ai', aiRoutes);
+router.use('/notifications', notificationRoutes);
 
 module.exports = router;

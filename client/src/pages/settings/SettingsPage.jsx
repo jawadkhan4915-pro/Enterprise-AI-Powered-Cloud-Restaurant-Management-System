@@ -15,6 +15,14 @@ export const SettingsPage = () => {
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // Notifications audit logs and mock test controls
+  const [logs, setLogs] = useState([]);
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [testForm, setTestForm] = useState({ channel: 'email', recipient: '', type: 'receipt' });
+  const [testLoading, setTestLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
   // New Branch Form State
   const [newBranch, setNewBranch] = useState({ name: '', phone: '', email: '', address: '' });
   const [showAddBranch, setShowAddBranch] = useState(false);
@@ -82,6 +90,49 @@ export const SettingsPage = () => {
     }
   };
 
+  const fetchLogs = async (pageNumber = 1) => {
+    setLogsLoading(true);
+    try {
+      const res = await api.get(`/notifications/logs?page=${pageNumber}&limit=8`);
+      setLogs(res.data.data.items);
+      setTotalPages(res.data.data.totalPages);
+      setPage(res.data.data.page);
+    } catch (err) {
+      dispatch(addToast({ message: 'Failed to fetch notification logs', type: 'error' }));
+    } finally {
+      setLogsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'notifications') {
+      fetchLogs(1);
+    }
+  }, [activeTab]);
+
+  const handleChannelChange = (channel) => {
+    setTestForm({
+      channel,
+      recipient: '',
+      type: channel === 'email' ? 'receipt' : 'booking_confirmed'
+    });
+  };
+
+  const handleSendTest = async (e) => {
+    e.preventDefault();
+    if (!testForm.recipient.trim()) return;
+    setTestLoading(true);
+    try {
+      await api.post('/notifications/test', testForm);
+      dispatch(addToast({ message: `Test ${testForm.channel} alert triggered successfully`, type: 'success' }));
+      fetchLogs(1);
+    } catch (err) {
+      dispatch(addToast({ message: 'Failed to trigger test notification', type: 'error' }));
+    } finally {
+      setTestLoading(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -128,6 +179,14 @@ export const SettingsPage = () => {
               }`}
             >
               <Shield className="h-4 w-4 mr-2.5" /> Security & Keys
+            </button>
+            <button 
+              onClick={() => setActiveTab('notifications')}
+              className={`flex items-center w-full px-3 py-2 text-xs font-semibold rounded-input transition-colors ${
+                activeTab === 'notifications' ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-50 dark:text-zinc-400 dark:hover:bg-zinc-900'
+              }`}
+            >
+              <Bell className="h-4 w-4 mr-2.5" /> Notification Alerts
             </button>
           </Card>
 
@@ -302,6 +361,156 @@ export const SettingsPage = () => {
                 </div>
                 <p className="text-xs text-slate-400 dark:text-zinc-500">Set API secrets, session length limits, password expiration intervals.</p>
               </Card>
+            )}
+
+            {activeTab === 'notifications' && (
+              <div className="space-y-6">
+                {/* Integration Snapshot */}
+                <Card className="space-y-4">
+                  <div className="pb-3 border-b border-slate-100 dark:border-zinc-800">
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-zinc-200">Integration Configuration</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div className="p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-card border border-slate-100 dark:border-zinc-800/50 space-y-2">
+                      <p className="font-bold text-slate-700 dark:text-zinc-300">SMTP Email Node</p>
+                      <p className="text-[10px] text-slate-400 dark:text-zinc-500">Auto-configured via .env keys. If empty or invalid, the mailer gracefully logs HTML templates to the console.</p>
+                      <span className="inline-block text-[9px] font-bold bg-blue-100 text-blue-600 dark:bg-blue-950/20 dark:text-blue-500 px-1.5 py-0.5 rounded-pill">SMTP Console Fallback Active</span>
+                    </div>
+                    <div className="p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-card border border-slate-100 dark:border-zinc-800/50 space-y-2">
+                      <p className="font-bold text-slate-700 dark:text-zinc-300">SMS Gateway API</p>
+                      <p className="text-[10px] text-slate-400 dark:text-zinc-500">Supports Twilio sending. If credentials are unset, the system defaults to printing SMS message blocks to standard output.</p>
+                      <span className="inline-block text-[9px] font-bold bg-amber-100 text-amber-600 dark:bg-amber-950/20 dark:text-amber-500 px-1.5 py-0.5 rounded-pill">Twilio Mock Engine Active</span>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Send Test Alert Form */}
+                <Card className="space-y-4">
+                  <div className="pb-3 border-b border-slate-100 dark:border-zinc-800">
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-zinc-200">Trigger Test Notification</h3>
+                  </div>
+                  <form onSubmit={handleSendTest} className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+                    <div className="space-y-1 sm:col-span-1">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">Channel</label>
+                      <select 
+                        value={testForm.channel} 
+                        onChange={(e) => handleChannelChange(e.target.value)}
+                        className="w-full text-xs border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-input px-3 py-2 text-slate-700 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-primary"
+                      >
+                        <option value="email">Email</option>
+                        <option value="sms">SMS</option>
+                      </select>
+                    </div>
+                    
+                    <div className="space-y-1 sm:col-span-1">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">Alert Type</label>
+                      <select 
+                        value={testForm.type} 
+                        onChange={(e) => setTestForm(prev => ({ ...prev, type: e.target.value }))}
+                        className="w-full text-xs border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-input px-3 py-2 text-slate-700 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-primary"
+                      >
+                        {testForm.channel === 'email' ? (
+                          <>
+                            <option value="receipt">Order Receipt Invoice</option>
+                            <option value="booking_confirmed">Reservation Confirmed</option>
+                          </>
+                        ) : (
+                          <>
+                            <option value="booking_confirmed">Reservation Confirmed</option>
+                            <option value="booking_seated">Table Seated Alert</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1 sm:col-span-1">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                        {testForm.channel === 'email' ? 'Recipient Email' : 'Recipient Phone'}
+                      </label>
+                      <input 
+                        type="text"
+                        placeholder={testForm.channel === 'email' ? 'e.g. test@example.com' : 'e.g. +447911123456'}
+                        value={testForm.recipient}
+                        onChange={(e) => setTestForm(prev => ({ ...prev, recipient: e.target.value }))}
+                        required
+                        className="w-full text-xs border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-input px-3 py-2 text-slate-700 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-1">
+                      <Button type="submit" variant="primary" loading={testLoading} className="w-full py-2.5">
+                        Send Test Alert
+                      </Button>
+                    </div>
+                  </form>
+                </Card>
+
+                {/* Audit Logs Table */}
+                <Card className="space-y-4">
+                  <div className="pb-3 border-b border-slate-100 dark:border-zinc-800">
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-zinc-200">Alert Audit History</h3>
+                  </div>
+                  <div className="overflow-x-auto">
+                    {logsLoading ? (
+                      <div className="space-y-3 py-4">
+                        <div className="h-6 bg-slate-100 dark:bg-zinc-800 rounded animate-pulse" />
+                        <div className="h-6 bg-slate-100 dark:bg-zinc-800 rounded animate-pulse" />
+                      </div>
+                    ) : logs.length === 0 ? (
+                      <p className="text-xs text-slate-400 dark:text-zinc-500 text-center py-4 font-semibold">No notification logs recorded yet.</p>
+                    ) : (
+                      <table className="w-full text-xs text-left border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-100 dark:border-zinc-800 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            <th className="py-2.5">Channel</th>
+                            <th className="py-2.5">Recipient</th>
+                            <th className="py-2.5">Alert Type</th>
+                            <th className="py-2.5">Status</th>
+                            <th className="py-2.5 text-right">Sent Date</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {logs.map((log) => (
+                            <tr key={log._id} className="border-b border-slate-50 dark:border-zinc-900/50 last:border-0 hover:bg-slate-50/30 dark:hover:bg-zinc-900/10">
+                              <td className="py-3 capitalize">
+                                <span className={`inline-block px-2 py-0.5 rounded-card font-bold text-[9px] ${
+                                  log.channel === 'email' ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400' : 'bg-pink-100 text-pink-600 dark:bg-pink-950/20 dark:text-pink-400'
+                                }`}>
+                                  {log.channel}
+                                </span>
+                              </td>
+                              <td className="py-3 font-semibold text-slate-700 dark:text-zinc-300">{log.recipient}</td>
+                              <td className="py-3 text-slate-500 dark:text-zinc-400 capitalize">{log.type.replace('_', ' ')}</td>
+                              <td className="py-3">
+                                <span className={`inline-block px-1.5 py-0.5 rounded-pill font-bold text-[9px] ${
+                                  log.status === 'sent' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-500' : 
+                                  log.status === 'logged' ? 'bg-blue-100 text-blue-600 dark:bg-blue-950/20 dark:text-blue-500' : 'bg-red-100 text-red-650'
+                                }`}>
+                                  {log.status}
+                                </span>
+                              </td>
+                              <td className="py-3 text-right text-slate-400">{new Date(log.createdAt).toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                  
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex justify-between items-center pt-3 border-t border-slate-100 dark:border-zinc-800">
+                      <Button variant="outline" size="sm" disabled={page === 1} onClick={() => fetchLogs(page - 1)}>
+                        Previous
+                      </Button>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500">Page {page} of {totalPages}</span>
+                      <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => fetchLogs(page + 1)}>
+                        Next
+                      </Button>
+                    </div>
+                  )}
+                </Card>
+              </div>
             )}
 
           </div>
