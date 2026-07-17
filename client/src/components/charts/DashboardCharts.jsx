@@ -34,11 +34,11 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 // 1. AREA CHART: Sales & Revenue curve
-export const SalesAreaChart = () => {
+export const SalesAreaChart = ({ data = [] }) => {
   const theme = useSelector((state) => state.ui.theme);
   const isDark = theme === 'dark';
 
-  const data = [
+  const defaultData = [
     { name: '08:00', sales: 420, orders: 12 },
     { name: '10:00', sales: 850, orders: 24 },
     { name: '12:00', sales: 2400, orders: 58 },
@@ -49,10 +49,14 @@ export const SalesAreaChart = () => {
     { name: '22:00', sales: 1200, orders: 28 },
   ];
 
+  const chartData = data && data.length > 0 
+    ? data.map(item => ({ name: item._id, sales: item.revenue, orders: item.count }))
+    : defaultData;
+
   return (
     <div className="h-72 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+        <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
@@ -90,11 +94,11 @@ export const SalesAreaChart = () => {
 };
 
 // 2. BAR CHART: Top dishes by revenue
-export const MenuPerformanceBarChart = () => {
+export const MenuPerformanceBarChart = ({ data = [] }) => {
   const theme = useSelector((state) => state.ui.theme);
   const isDark = theme === 'dark';
 
-  const data = [
+  const defaultData = [
     { name: 'Truffle Pasta', revenue: 1850 },
     { name: 'Ribeye Steak', revenue: 3200 },
     { name: 'Burger & Fries', revenue: 1450 },
@@ -102,10 +106,14 @@ export const MenuPerformanceBarChart = () => {
     { name: 'Salmon Bowl', revenue: 2100 },
   ];
 
+  const chartData = data && data.length > 0 
+    ? data.map(item => ({ name: item.name, revenue: item.totalRevenue }))
+    : defaultData;
+
   return (
     <div className="h-72 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+        <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? '#27272a' : '#f1f5f9'} />
           <XAxis 
             dataKey="name" 
@@ -129,16 +137,17 @@ export const MenuPerformanceBarChart = () => {
 };
 
 // 3. PIE CHART: Orders Channels distribution
-export const OrdersDistributionPieChart = () => {
+export const OrdersDistributionPieChart = ({ data = [] }) => {
   const theme = useSelector((state) => state.ui.theme);
   const isDark = theme === 'dark';
 
-  const data = [
+  const defaultData = [
     { name: 'Dine-In', value: 45 },
     { name: 'Delivery', value: 35 },
     { name: 'Takeaway', value: 20 },
   ];
 
+  const chartData = data && data.length > 0 ? data : defaultData;
   const COLORS = ['#10b981', '#3b82f6', '#f59e0b'];
 
   return (
@@ -146,7 +155,7 @@ export const OrdersDistributionPieChart = () => {
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
-            data={data}
+            data={chartData}
             cx="50%"
             cy="50%"
             innerRadius={60}
@@ -154,7 +163,7 @@ export const OrdersDistributionPieChart = () => {
             paddingAngle={5}
             dataKey="value"
           >
-            {data.map((entry, index) => (
+            {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>

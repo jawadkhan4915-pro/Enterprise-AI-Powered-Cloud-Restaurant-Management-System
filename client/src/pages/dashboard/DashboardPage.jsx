@@ -4,6 +4,7 @@ import useAuth from '../../hooks/useAuth';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
+import api from '../../services/api';
 import { 
   SalesAreaChart, 
   MenuPerformanceBarChart, 
@@ -26,11 +27,69 @@ export const DashboardPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [time, setTime] = useState(new Date());
+  const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState({
+    todaySales: 0,
+    occupiedTables: 0,
+    totalTables: 0,
+    kitchenOrders: 0,
+    lowStockItems: 0
+  });
+  const [salesTrend, setSalesTrend] = useState([]);
+  const [topItems, setTopItems] = useState([]);
+  const [orderDistribution, setOrderDistribution] = useState([]);
+  const [recentEvents, setRecentEvents] = useState([]);
 
   // Real-time clock refresh
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      try {
+        const statsRes = await api.get('/restaurant/dashboard');
+        setStats(statsRes.data.data);
+
+        const salesRes = await api.get('/reports/sales');
+        setSalesTrend(salesRes.data.data?.revenueByDay || []);
+
+        const itemsRes = await api.get('/reports/top-items?limit=5');
+        setTopItems(itemsRes.data.data?.items || []);
+
+        const ordersRes = await api.get('/orders');
+        const orders = ordersRes.data.data?.items || [];
+        
+        const dineIn = orders.filter(o => o.orderType === 'dine_in').length;
+        const delivery = orders.filter(o => o.orderType === 'delivery').length;
+        const takeaway = orders.filter(o => o.orderType === 'takeaway').length;
+        const total = dineIn + delivery + takeaway || 1;
+        setOrderDistribution([
+          { name: 'Dine-In', value: dineIn },
+          { name: 'Delivery', value: delivery },
+          { name: 'Takeaway', value: takeaway },
+        ]);
+
+        const mappedEvents = orders.slice(0, 4).map(o => {
+          const relativeTime = new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          return {
+            id: o._id,
+            action: `Order #${o.orderNumber} is ${o.status}`,
+            user: o.customerDetails?.name || 'Customer',
+            time: relativeTime
+          };
+        });
+        setRecentEvents(mappedEvents);
+      } catch (err) {
+        console.error('Error loading dashboard stats:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
 
   const getGreeting = () => {
@@ -52,8 +111,8 @@ export const DashboardPage = () => {
   const kpis = [
     {
       title: "Today's Sales",
-      value: "$4,820.50",
-      change: "+12.3%",
+      value: `$${(stats.todaySales || 0).toFixed(2)}`,
+      change: "Live updates",
       changeType: "up",
       icon: TrendingUp,
       iconClass: "bg-emerald-100 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-500",
@@ -61,8 +120,8 @@ export const DashboardPage = () => {
     },
     {
       title: "Active Occupancy",
-      value: "14 / 20 Tables",
-      change: "70% Full",
+      value: `${stats.occupiedTables} / ${stats.totalTables} Tables`,
+      change: `${stats.totalTables ? Math.round((stats.occupiedTables / stats.totalTables) * 100) : 0}% Full`,
       changeType: "neutral",
       icon: Users,
       iconClass: "bg-blue-100 text-blue-600 dark:bg-blue-950/30 dark:text-blue-500",
@@ -70,8 +129,8 @@ export const DashboardPage = () => {
     },
     {
       title: "Kitchen Queue",
-      value: "8 Orders Cooking",
-      change: "4 Priority",
+      value: `${stats.kitchenOrders} Cooking`,
+      change: "Active tickets",
       changeType: "warning",
       icon: ChefHat,
       iconClass: "bg-purple-100 text-purple-600 dark:bg-purple-950/30 dark:text-purple-500",
@@ -79,20 +138,13 @@ export const DashboardPage = () => {
     },
     {
       title: "Inventory Alert",
-      value: "3 Items Low",
-      change: "Needs ordering",
-      changeType: "danger",
+      value: `${stats.lowStockItems} Items Low`,
+      change: stats.lowStockItems > 0 ? "Needs ordering" : "Fully stocked",
+      changeType: stats.lowStockItems > 0 ? "danger" : "neutral",
       icon: AlertTriangle,
       iconClass: "bg-red-100 text-red-600 dark:bg-red-950/30 dark:text-red-500",
       path: "/inventory",
     },
-  ];
-
-  const recentEvents = [
-    { id: 1, action: 'Order #1084 paid via Cash', user: 'Cashier Sarah', time: '2m ago' },
-    { id: 2, action: 'Table 8 changed status to Dirty', user: 'Waiter John', time: '5m ago' },
-    { id: 3, action: 'Waste Entry: 1.2kg Chicken discarded', user: 'Chef Chef', time: '12m ago' },
-    { id: 4, action: 'Low stock triggered: Tomato Sauce', user: 'System', time: '18m ago' },
   ];
 
   return (
@@ -165,7 +217,7 @@ export const DashboardPage = () => {
                 Full Report <ArrowUpRight className="h-3 w-3 ml-1" />
               </Button>
             </div>
-            <SalesAreaChart />
+            <SalesAreaChart data={salesTrend} />
           </Card>
 
           {/* Orders Channels Distribution */}
@@ -174,7 +226,7 @@ export const DashboardPage = () => {
               <h4 className="text-sm font-bold text-slate-800 dark:text-zinc-200">Orders Distribution</h4>
               <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-semibold">Today's active order channels</p>
             </div>
-            <OrdersDistributionPieChart />
+            <OrdersDistributionPieChart data={orderDistribution} />
           </Card>
         </div>
 
@@ -186,7 +238,7 @@ export const DashboardPage = () => {
               <h4 className="text-sm font-bold text-slate-800 dark:text-zinc-200">Top Performing Items</h4>
               <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-semibold">Best-selling dishes measured by revenue contribution</p>
             </div>
-            <MenuPerformanceBarChart />
+            <MenuPerformanceBarChart data={topItems} />
           </Card>
 
           {/* Real-time Activity Feed */}

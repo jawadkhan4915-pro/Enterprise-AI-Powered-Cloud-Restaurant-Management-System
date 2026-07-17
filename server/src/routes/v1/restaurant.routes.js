@@ -13,6 +13,9 @@ router.route('/')
   .get(restaurantController.getRestaurantProfile)
   .patch(checkPermission('update_branch'), restaurantController.updateRestaurantProfile);
 
+router.route('/dashboard')
+  .get(restaurantController.getDashboardStats);
+
 // Branch routes
 router.route('/branches')
   .get(restaurantController.getRestaurantBranches)
