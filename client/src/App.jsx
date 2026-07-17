@@ -28,6 +28,8 @@ const ReportsPage = lazy(() => import('./pages/reports/ReportsPage'));
 const AIPage = lazy(() => import('./pages/ai/AIPage'));
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage'));
 const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'));
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const HelpCenterPage = lazy(() => import('./pages/help/HelpCenterPage'));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-zinc-950">
@@ -81,11 +83,12 @@ export const App = () => {
           <Route path="/ai" element={<ProtectedRoute><AIPage /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/help" element={<ProtectedRoute><HelpCenterPage /></ProtectedRoute>} />
 
-          {/* Error / Fallback Routes */}
+          {/* Fallback & Home Routes */}
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
       <ToastContainer />

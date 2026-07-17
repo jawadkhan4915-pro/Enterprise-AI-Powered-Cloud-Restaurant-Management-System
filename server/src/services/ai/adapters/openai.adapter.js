@@ -1,8 +1,9 @@
+const BaseAIAdapter = require('./base.adapter');
 const logger = require('../../../config/logger');
 
-class OpenAIAdapter {
+class OpenAIAdapter extends BaseAIAdapter {
   constructor(config) {
-    this.name = `OpenAI Compatible Adapter (${config.provider || 'openai'})`;
+    super(`OpenAI Compatible Adapter (${config.provider || 'openai'})`);
     this.apiKey = config.apiKey || '';
     this.endpoint = config.endpoint || 'https://api.openai.com/v1/chat/completions';
     this.model = config.model || 'gpt-4o-mini';

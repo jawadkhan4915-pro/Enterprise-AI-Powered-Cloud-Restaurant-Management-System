@@ -52,6 +52,25 @@ const restaurantSchema = new mongoose.Schema(
         default: 0, // e.g. 5% service charge
       },
     },
+    aiSettings: {
+      provider: {
+        type: String,
+        enum: ['none', 'mock', 'openai', 'ollama', 'lmstudio', 'openrouter'],
+        default: 'mock',
+      },
+      apiKey: {
+        type: String,
+        default: '',
+      },
+      endpoint: {
+        type: String,
+        default: '',
+      },
+      model: {
+        type: String,
+        default: '',
+      },
+    },
     isDeleted: {
       type: Boolean,
       default: false,

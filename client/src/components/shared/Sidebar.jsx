@@ -17,7 +17,8 @@ import {
   BarChart3,
   Settings,
   X,
-  Sparkles
+  Sparkles,
+  HelpCircle
 } from 'lucide-react';
 
 export const Sidebar = () => {
@@ -39,6 +40,7 @@ export const Sidebar = () => {
     { name: 'Reports Builder', path: '/reports', icon: BarChart3, permission: 'read_reports' },
     { name: 'AI Assistant', path: '/ai', icon: Sparkles, permission: 'read_auth' },
     { name: 'Settings', path: '/settings', icon: Settings, permission: 'read_auth' },
+    { name: 'Help Center', path: '/help', icon: HelpCircle, permission: 'read_auth' },
   ];
 
   // Filter items user has rights to see

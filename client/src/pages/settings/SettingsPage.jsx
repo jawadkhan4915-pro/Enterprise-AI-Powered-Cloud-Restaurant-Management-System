@@ -6,12 +6,20 @@ import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import api from '../../services/api';
-import { Settings, Save, Sliders, Shield, Printer, Bell, MapPin, Plus, Trash2, Eye } from 'lucide-react';
+import { Settings, Save, Sliders, Shield, Printer, Bell, MapPin, Plus, Trash2, Eye, Sparkles } from 'lucide-react';
 
 export const SettingsPage = () => {
   const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState('general');
-  const [profile, setProfile] = useState({ name: '', phone: '', email: '', address: '', taxInfo: { rate: 10, vatNumber: '' }, currency: 'USD' });
+  const [profile, setProfile] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    address: '',
+    taxInfo: { rate: 10, vatNumber: '' },
+    currency: 'USD',
+    aiSettings: { provider: 'mock', apiKey: '', endpoint: '', model: '' }
+  });
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -187,6 +195,14 @@ export const SettingsPage = () => {
               }`}
             >
               <Bell className="h-4 w-4 mr-2.5" /> Notification Alerts
+            </button>
+            <button 
+              onClick={() => setActiveTab('ai')}
+              className={`flex items-center w-full px-3 py-2 text-xs font-semibold rounded-input transition-colors ${
+                activeTab === 'ai' ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-50 dark:text-zinc-400 dark:hover:bg-zinc-900'
+              }`}
+            >
+              <Sparkles className="h-4 w-4 mr-2.5 text-emerald-500 animate-pulse" /> AI Engine Settings
             </button>
           </Card>
 
@@ -511,6 +527,91 @@ export const SettingsPage = () => {
                   )}
                 </Card>
               </div>
+            )}
+
+            {/* AI Settings Tab */}
+            {activeTab === 'ai' && (
+              <form onSubmit={handleUpdateProfile} className="space-y-6">
+                <Card className="space-y-4">
+                  <div className="pb-3 border-b border-slate-100 dark:border-zinc-800">
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-zinc-200 flex items-center">
+                      <Sparkles className="h-4.5 w-4.5 text-emerald-500 mr-2" /> AI Engine Settings
+                    </h3>
+                    <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-semibold">Configure local or cloud LLM APIs dynamically</p>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-slate-700 dark:text-zinc-350">AI Provider Provider</label>
+                      <select 
+                        value={profile.aiSettings?.provider || 'mock'} 
+                        onChange={(e) => setProfile(prev => ({ 
+                          ...prev, 
+                          aiSettings: { ...prev.aiSettings, provider: e.target.value } 
+                        }))}
+                        className="w-full text-xs border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-input px-3 py-2 text-slate-700 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-primary"
+                      >
+                        <option value="mock">None / Mock Adapter (Demo Mode)</option>
+                        <option value="openai">OpenAI Compatible API</option>
+                        <option value="ollama">Ollama (Local LLM)</option>
+                        <option value="lmstudio">LM Studio (Local LLM)</option>
+                        <option value="openrouter">OpenRouter API</option>
+                      </select>
+                    </div>
+
+                    {profile.aiSettings?.provider !== 'mock' && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-scale-in">
+                        {(profile.aiSettings?.provider === 'openai' || profile.aiSettings?.provider === 'openrouter') && (
+                          <Input 
+                            label="API Key" 
+                            type="password"
+                            placeholder="sk-..." 
+                            value={profile.aiSettings?.apiKey || ''} 
+                            onChange={(e) => setProfile(prev => ({ 
+                              ...prev, 
+                              aiSettings: { ...prev.aiSettings, apiKey: e.target.value } 
+                            }))}
+                          />
+                        )}
+                        <Input 
+                          label="Custom Endpoint URL" 
+                          placeholder={
+                            profile.aiSettings?.provider === 'ollama' ? 'e.g. http://localhost:11434/v1/chat/completions' :
+                            profile.aiSettings?.provider === 'lmstudio' ? 'e.g. http://localhost:1234/v1/chat/completions' :
+                            profile.aiSettings?.provider === 'openrouter' ? 'e.g. https://openrouter.ai/api/v1/chat/completions' :
+                            'e.g. https://api.openai.com/v1/chat/completions'
+                          }
+                          value={profile.aiSettings?.endpoint || ''} 
+                          onChange={(e) => setProfile(prev => ({ 
+                            ...prev, 
+                            aiSettings: { ...prev.aiSettings, endpoint: e.target.value } 
+                          }))}
+                        />
+                        <Input 
+                          label="Model Name" 
+                          placeholder={
+                            profile.aiSettings?.provider === 'ollama' ? 'e.g. llama3, gemma' :
+                            profile.aiSettings?.provider === 'lmstudio' ? 'e.g. model-identifier' :
+                            profile.aiSettings?.provider === 'openrouter' ? 'e.g. google/gemma-2-9b-it:free' :
+                            'e.g. gpt-4o-mini'
+                          }
+                          value={profile.aiSettings?.model || ''} 
+                          onChange={(e) => setProfile(prev => ({ 
+                            ...prev, 
+                            aiSettings: { ...prev.aiSettings, model: e.target.value } 
+                          }))}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </Card>
+
+                <div className="flex justify-end">
+                  <Button type="submit" variant="primary" loading={loading} icon={Save}>
+                    Save AI Settings
+                  </Button>
+                </div>
+              </form>
             )}
 
           </div>
