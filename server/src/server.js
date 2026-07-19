@@ -366,7 +366,6 @@ const seedDatabase = async () => {
     }
 
     // Seed default employees
-    const Employee = require('./models/Employee.model');
     const employeeCount = await Employee.countDocuments();
     if (employeeCount === 0) {
       logger.info('Seeding default employees...');
