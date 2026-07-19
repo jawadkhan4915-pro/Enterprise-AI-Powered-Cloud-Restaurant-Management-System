@@ -11,6 +11,7 @@ const orderSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Table',
       default: null, // null for delivery / takeaway
+      set: v => (v === '' ? null : v),
     },
     items: [
       {

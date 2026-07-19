@@ -11,16 +11,31 @@ export default defineConfig({
         target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            // Suppress proxy connection resets/refusals log spam
+          });
+        },
       },
       '/uploads': {
         target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            // Suppress upload proxy error logs
+          });
+        },
       },
       '/socket.io': {
         target: 'http://localhost:5000',
         changeOrigin: true,
         ws: true,
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            // Suppress websocket ECONNRESET error log spam
+          });
+        },
       },
     },
   },

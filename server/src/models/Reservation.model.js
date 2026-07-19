@@ -26,6 +26,7 @@ const reservationSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Table',
       default: null, // Table mapping can be done later by host
+      set: v => (v === '' ? null : v),
     },
     partySize: {
       type: Number,
