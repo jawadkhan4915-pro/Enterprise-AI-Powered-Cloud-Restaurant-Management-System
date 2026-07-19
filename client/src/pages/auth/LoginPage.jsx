@@ -24,10 +24,21 @@ export const LoginPage = () => {
   const onSubmit = async (data) => {
     const loggedInUser = await login(data);
     if (loggedInUser) {
-      if (loggedInUser.role === 'customer') {
+      const role = loggedInUser.role;
+      if (role === 'customer') {
         navigate('/customer/order');
-      } else if (loggedInUser.role === 'delivery_rider') {
+      } else if (role === 'delivery_rider') {
         navigate('/rider/deliveries');
+      } else if (role === 'chef' || role === 'kitchen_staff') {
+        navigate('/kitchen');
+      } else if (role === 'cashier' || role === 'waiter') {
+        navigate('/pos');
+      } else if (role === 'inventory_manager') {
+        navigate('/inventory');
+      } else if (role === 'accountant') {
+        navigate('/finance');
+      } else if (role === 'hr_manager') {
+        navigate('/employees');
       } else {
         navigate('/dashboard');
       }
