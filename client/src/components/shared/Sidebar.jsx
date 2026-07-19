@@ -38,6 +38,7 @@ export const Sidebar = () => {
     { name: 'Inventory', path: '/inventory', icon: Package, permission: 'read_inventory' },
     { name: 'CRM & Loyalty', path: '/crm', icon: Users, permission: 'read_customers' },
     { name: 'Staff Management', path: '/employees', icon: Users2, permission: 'read_employees' },
+    { name: 'Attendance System', path: '/attendance', icon: Calendar, permission: 'read_auth' },
     { name: 'Finance & P&L', path: '/finance', icon: DollarSign, permission: 'read_finance' },
     { name: 'Reports Builder', path: '/reports', icon: BarChart3, permission: 'read_reports' },
     { name: 'AI Assistant', path: '/ai', icon: Sparkles, permission: 'read_auth' },

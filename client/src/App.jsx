@@ -23,6 +23,7 @@ const MenuPage = lazy(() => import('./pages/menu/MenuPage'));
 const InventoryPage = lazy(() => import('./pages/inventory/InventoryPage'));
 const CRMPage = lazy(() => import('./pages/crm/CRMPage'));
 const EmployeesPage = lazy(() => import('./pages/employees/EmployeesPage'));
+const AttendancePage = lazy(() => import('./pages/attendance/AttendancePage'));
 const FinancePage = lazy(() => import('./pages/finance/FinancePage'));
 const ReportsPage = lazy(() => import('./pages/reports/ReportsPage'));
 const AIPage = lazy(() => import('./pages/ai/AIPage'));
@@ -83,6 +84,7 @@ export const App = () => {
           <Route path="/inventory" element={<ProtectedRoute><InventoryPage /></ProtectedRoute>} />
           <Route path="/crm" element={<ProtectedRoute><CRMPage /></ProtectedRoute>} />
           <Route path="/employees" element={<ProtectedRoute><EmployeesPage /></ProtectedRoute>} />
+          <Route path="/attendance" element={<ProtectedRoute><AttendancePage /></ProtectedRoute>} />
           <Route path="/finance" element={<ProtectedRoute><FinancePage /></ProtectedRoute>} />
           <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
           <Route path="/ai" element={<ProtectedRoute><AIPage /></ProtectedRoute>} />

@@ -41,7 +41,7 @@ const menuItemSchema = new mongoose.Schema(
     },
     preparationTime: {
       type: Number,
-      default: 15, // prep time in minutes
+      default: 8, // prep time in minutes
     },
     variants: [
       {
