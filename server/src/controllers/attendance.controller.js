@@ -58,11 +58,14 @@ const calculateAttendanceMetrics = (clockIn, clockOut, breaks, shift) => {
 };
 
 const getTodayStatus = catchAsync(async (req, res) => {
-  const employee = await findEmployeeForUser(req.user._id);
+  const employee = await Employee.findOne({ userId: req.user._id, isDeleted: false });
   const dateStr = getLocalDateString();
-  let log = await attendanceRepo.findTodayRecord(employee._id, dateStr);
+  let log = null;
+  if (employee) {
+    log = await attendanceRepo.findTodayRecord(employee._id, dateStr);
+  }
 
-  res.send(new ApiResponse(200, { employee, attendance: log }, 'Today attendance status retrieved'));
+  res.send(new ApiResponse(200, { employee: employee || null, attendance: log }, 'Today attendance status retrieved'));
 });
 
 const clockIn = catchAsync(async (req, res) => {
@@ -174,13 +177,16 @@ const endBreak = catchAsync(async (req, res) => {
 });
 
 const getMyLogs = catchAsync(async (req, res) => {
-  const employee = await findEmployeeForUser(req.user._id);
+  const employee = await Employee.findOne({ userId: req.user._id, isDeleted: false });
+  if (!employee) {
+    return res.send(new ApiResponse(200, { items: [], total: 0, page: 1, limit: 30, totalPages: 0 }, 'No employee profile linked'));
+  }
   const { page, limit } = req.query;
   const result = await attendanceRepo.getEmployeeAttendanceLogs(employee._id, {
     page: parseInt(page, 10) || 1,
     limit: parseInt(limit, 10) || 30,
   });
-
+ 
   res.send(new ApiResponse(200, result, 'Attendance history retrieved'));
 });
 

@@ -317,7 +317,11 @@ export const AttendancePage = () => {
 
               {/* Status Badge */}
               <div className="w-full flex justify-center">
-                {!todayAttendance ? (
+                {!employee ? (
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:text-zinc-400 rounded-pill text-[10px] font-bold uppercase">
+                    <User className="w-4 h-4" /> Admin Access
+                  </div>
+                ) : !todayAttendance ? (
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-105/70 text-slate-550 dark:bg-zinc-850/50 dark:text-zinc-400 rounded-pill text-[10px] font-bold uppercase">
                     <AlertCircle className="w-4 h-4" /> Not Clocked In
                   </div>
@@ -340,6 +344,14 @@ export const AttendancePage = () => {
               <div className="w-full space-y-3">
                 {loading ? (
                   <Skeleton variant="rectangular" height={50} className="rounded-card" />
+                ) : !employee ? (
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-850 text-center text-xs text-slate-550 font-semibold">
+                    <Check className="w-6 h-6 text-emerald-500 mx-auto mb-2" />
+                    Administrator Account
+                    <p className="text-[10px] text-slate-400 mt-1 font-normal">
+                      No shift check-in required. Switch to the "Team Roster" tab to manage staff logs.
+                    </p>
+                  </div>
                 ) : !todayAttendance ? (
                   <Button
                     variant="primary"
