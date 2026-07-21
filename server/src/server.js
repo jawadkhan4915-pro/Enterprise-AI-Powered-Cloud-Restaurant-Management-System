@@ -15,9 +15,26 @@ const logger = require('./config/logger');
 const server = http.createServer(app);
 
 // Bootstrap Socket.IO with CORS policies
+const parseAllowedOrigins = (clientUrlEnv) => {
+  if (!clientUrlEnv || clientUrlEnv === '*') return '*';
+  return clientUrlEnv
+    .split(',')
+    .map((url) => url.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+};
+
+const allowedSocketOrigins = parseAllowedOrigins(config.clientUrl);
+
 const io = socketIo(server, {
   cors: {
-    origin: config.clientUrl,
+    origin: (origin, callback) => {
+      if (!origin || allowedSocketOrigins === '*') return callback(null, true);
+      const normalizedOrigin = origin.replace(/\/$/, '');
+      if (allowedSocketOrigins.includes(normalizedOrigin) || normalizedOrigin.endsWith('.vercel.app')) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     methods: ['GET', 'POST'],
     credentials: true,
   },

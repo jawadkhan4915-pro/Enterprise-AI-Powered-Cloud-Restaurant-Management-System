@@ -31,10 +31,27 @@ app.use(express.json());
 // Parse URL-encoded request bodies
 app.use(express.urlencoded({ extended: true }));
 
-// Enable CORS
+// Enable CORS with flexible origin matching for production deployments
+const parseAllowedOrigins = (clientUrlEnv) => {
+  if (!clientUrlEnv || clientUrlEnv === '*') return '*';
+  return clientUrlEnv
+    .split(',')
+    .map((url) => url.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+};
+
+const allowedOrigins = parseAllowedOrigins(config.clientUrl);
+
 app.use(
   cors({
-    origin: config.clientUrl,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins === '*') return callback(null, true);
+      const normalizedOrigin = origin.replace(/\/$/, '');
+      if (allowedOrigins.includes(normalizedOrigin) || normalizedOrigin.endsWith('.vercel.app')) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
   })
 );
