@@ -1,6 +1,12 @@
 const mongoose = require('mongoose');
+const dns = require('dns');
 const config = require('./env');
 const logger = require('./logger');
+
+// Prefer IPv4 for SRV DNS resolution in Node.js 18+ cloud environments
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 let retries = 0;
 const MAX_RETRIES = 5;
